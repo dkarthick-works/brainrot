@@ -1,0 +1,87 @@
+/* Settings: grouped sections */
+.section-label {
+  max-width: 480px;
+  margin: 20px auto 8px;
+  padding: 0 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.section-note { max-width: 480px; margin: 8px auto 0; padding: 0 16px; font-size: 13px; color: var(--muted); }
+.row-end { display: flex; align-items: center; gap: 6px; }
+.chev { width: 16px; height: 16px; color: var(--muted); }
+.row.danger-text { color: var(--again); font-weight: 500; }
+.row.account { gap: 14px; justify-content: flex-start; padding-top: 14px; padding-bottom: 14px; }
+.avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--good);
+  color: var(--on-grade);
+  font-weight: 600;
+}
+.account-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.account-text span { font-size: 14px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.row.about { cursor: default; }
+.brand-mark { font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.02em; }
+
+/* Segmented control (theme): same look as the difficulty bar */
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 480px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  overflow: hidden;
+}
+.segmented button { height: 44px; border: 0; background: none; font-size: 15px; font-weight: 500; }
+.segmented button + button { box-shadow: inset 1px 0 var(--line); }
+.segmented .selected { background: var(--good); color: var(--on-grade); font-weight: 600; box-shadow: none; }
+.segmented .selected + button { box-shadow: none; }
+
+/* Agent access */
+.connect {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 14px 16px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.connect-label { font-size: 13px; font-weight: 500; color: var(--muted); margin-top: 4px; }
+.code-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 10px 10px 12px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+.code-box code { flex: 1; min-width: 0; font-size: 13px; line-height: 1.5; word-break: break-all; }
+.copy-btn {
+  flex: none;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--good);
+}
+.key-prefix { font-size: 13px; color: var(--muted); }
+.key-meta { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 12px; color: var(--muted); padding-top: 2px; }
+.row.key-row { align-items: flex-start; padding-top: 12px; padding-bottom: 12px; }
+.key-reveal { margin-bottom: 20px; text-align: left; }
+.sheet-actions .copy-btn { height: 44px; border-radius: 12px; font-size: 15px; background: var(--bg); }

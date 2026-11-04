@@ -1,0 +1,21 @@
+meta {
+  name: Create topic
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/topics
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Spanish"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) bru.setEnvVar("topicId", res.body.id);
+}

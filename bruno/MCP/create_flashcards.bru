@@ -1,0 +1,35 @@
+meta {
+  name: create_flashcards
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/mcp
+  body: json
+  auth: inherit
+}
+
+headers {
+  Accept: application/json, text/event-stream
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "create_flashcards",
+      "arguments": {
+        "topic": "Go",
+        "cards": [
+          {
+            "question": "Zero value of an int in Go?",
+            "answer": "0"
+          }
+        ]
+      }
+    }
+  }
+}

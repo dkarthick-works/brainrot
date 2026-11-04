@@ -1,0 +1,29 @@
+meta {
+  name: get_due_flashcards
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/mcp
+  body: json
+  auth: inherit
+}
+
+headers {
+  Accept: application/json, text/event-stream
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "tools/call",
+    "params": {
+      "name": "get_due_flashcards",
+      "arguments": {
+        "limit": 5
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Move all cards
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/topics/{{topicId}}/move-cards
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "toTopicId": "{{toTopicId}}"
+  }
+}
+
+docs {
+  Moves every card from `topicId` to `toTopicId`. The default topic id is `<userId>:default`. Duplicates are skipped and listed.
+}

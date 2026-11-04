@@ -1,0 +1,94 @@
+/* Card rows: question, answer preview, optional topic, due label */
+.row.card-row { align-items: flex-start; padding-top: 12px; padding-bottom: 12px; }
+.card-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.card-q {
+  font-weight: 600;
+  font-size: 15px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-a, .ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-a { font-size: 14px; color: var(--muted); }
+.card-topic { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+.due { flex: none; font-size: 12px; color: var(--muted); padding-top: 2px; }
+.due.now { color: var(--good); font-weight: 600; }
+
+/* Edit-card dialog: just the flashcard and the buttons, no sheet behind them */
+.sheet.edit {
+  width: min(100% - 32px, 380px);
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.edit-stack { position: relative; aspect-ratio: 3 / 4; max-height: 70dvh; margin: 0 auto; }
+/* Inside the edit card: buttons pinned to the bottom, hint and topic picker stacked above them */
+/* Buttons fill the card's bottom edge: no gap, no margin, corners follow the card */
+.card-actions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  gap: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 24px 24px;
+  overflow: hidden;
+}
+.card-actions button { height: 56px; border: 0; border-radius: 0; }
+.card-actions button:first-child { background: none; }
+.edit-card .hint { bottom: 72px; }
+.edit-card .face { padding: 56px 24px 150px; justify-content: flex-start; } /* text starts near the top, leaving room to type */
+.edit-card { user-select: auto; touch-action: auto; cursor: pointer; }
+/* Topic picker: pill near the bottom of the card front, custom chevron with room to breathe */
+.topic-pick {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+}
+.topic-pick select {
+  appearance: none;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 32px 6px 14px; /* right padding leaves space for the chevron */
+  field-sizing: content; /* width follows the selected name, not the longest option (Chrome/Edge; Safari falls back to widest) */
+  cursor: pointer;
+}
+.topic-pick select:focus { outline: none; border-color: var(--good); }
+.topic-pick .icon {
+  position: absolute;
+  right: 12px;
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.face-field {
+  width: 100%;
+  border: 1px dashed transparent;
+  border-radius: 12px;
+  background: none;
+  font: inherit;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--ink);
+  resize: none;
+  padding: 8px;
+  cursor: text;
+}
+.face-field:hover { border-color: var(--line); }
+.face-field:focus { outline: none; border-color: var(--good); background: var(--bg); }
+.hint.flip { border: 0; background: none; font: inherit; font-size: 13px; color: var(--muted); }

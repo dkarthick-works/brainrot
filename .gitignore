@@ -1,0 +1,31 @@
+# Build output
+target/
+dist/
+*.tsbuildinfo
+# Frontend build copied into the jar by the Dockerfile only
+src/main/resources/static/
+
+# Dependencies
+node_modules/
+.mvn/wrapper/maven-wrapper.jar
+
+# Env files with local values (.env.example and frontend/.env.production are committed)
+.env
+*.local
+
+# Test output
+test-results/
+playwright-report/
+coverage/
+
+# Logs
+*.log
+
+# Editors, OS, local tool state
+.idea/
+*.iml
+.vscode/
+.DS_Store
+.claude/settings.local.json
+graphify-out/
+HELP.md

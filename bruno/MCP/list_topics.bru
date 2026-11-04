@@ -1,0 +1,27 @@
+meta {
+  name: list_topics
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/mcp
+  body: json
+  auth: inherit
+}
+
+headers {
+  Accept: application/json, text/event-stream
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "method": "tools/call",
+    "params": {
+      "name": "list_topics",
+      "arguments": {}
+    }
+  }
+}

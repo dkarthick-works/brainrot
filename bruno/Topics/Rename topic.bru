@@ -1,0 +1,17 @@
+meta {
+  name: Rename topic
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/topics/{{topicId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Spanish A1"
+  }
+}

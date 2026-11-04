@@ -1,0 +1,10 @@
+# Dev only: local MongoDB on a non-default port. Production uses a Coolify MongoDB resource.
+services:
+  mongo:
+    image: mongo:8
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data:/data/db
+volumes:
+  mongo-data:

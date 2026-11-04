@@ -1,0 +1,29 @@
+meta {
+  name: Create API key
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/api-keys
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{clerkToken}}
+}
+
+body:json {
+  {
+    "name": "claude-code"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) { bru.setEnvVar("apiKeyId", res.body.id); bru.setEnvVar("token", res.body.key); }
+}
+
+docs {
+  Needs a Clerk JWT in `clerkToken`. The raw key is returned once; the script saves it to `token`, so every other request then uses it.
+}

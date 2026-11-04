@@ -1,0 +1,26 @@
+meta {
+  name: List cards
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/cards?limit=50
+  body: none
+  auth: inherit
+}
+
+params:query {
+  limit: 50
+  ~q: france
+  ~topicId: {{topicId}}
+  ~after: {{cursor}}
+}
+
+script:post-response {
+  bru.setEnvVar("cursor", res.body.nextCursor || "");
+}
+
+docs {
+  Newest first. Enable `after` to fetch the next page (the post-response script stores `nextCursor` in `cursor`). `q` is plain text, case-insensitive.
+}

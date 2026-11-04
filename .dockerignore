@@ -1,0 +1,10 @@
+target
+.git
+.idea
+*.md
+compose.yaml
+bruno
+frontend/node_modules
+frontend/dist
+frontend/.env.local
+prototype

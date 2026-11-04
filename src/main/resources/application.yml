@@ -1,0 +1,36 @@
+server:
+  port: ${PORT:8088}
+  mime-mappings:
+    webmanifest: application/manifest+json # PWA manifest of the bundled web app
+
+spring:
+  application:
+    name: flashcards
+  mongodb:
+    uri: ${MONGODB_URI:mongodb://localhost:27018/flashcards}
+  data:
+    mongodb:
+      auto-index-creation: true
+  mvc:
+    problemdetails:
+      enabled: true
+  ai:
+    mcp:
+      server:
+        name: flashcards
+        version: 1.0.0
+        type: SYNC
+        protocol: STATELESS # endpoint: POST /mcp; each call runs on the request thread, so the user is in the security context
+        instructions: >
+          Flashcards with spaced repetition (SM-2). Use create_flashcards to add question/answer cards,
+          optionally grouped by topic name. Search first if unsure whether a card exists; exact duplicates are skipped anyway.
+
+app:
+  clerk-issuer: ${CLERK_ISSUER:https://right-perch-3118.clerk.accounts.dev}
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:8089,http://localhost:8088} # Vite dev server, bundled app. Also checked against the Clerk token azp
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

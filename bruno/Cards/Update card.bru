@@ -1,0 +1,21 @@
+meta {
+  name: Update card
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/cards/{{cardId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "answer": "SuperMemo 2 (Wozniak, 1987)"
+  }
+}
+
+docs {
+  Any of `question`, `answer`, `topicId` (moves the card). SM-2 state is kept. 409 if the target topic already has the question.
+}

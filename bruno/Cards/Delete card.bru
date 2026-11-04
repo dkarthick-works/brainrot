@@ -1,0 +1,11 @@
+meta {
+  name: Delete card
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/cards/{{cardId}}
+  body: none
+  auth: inherit
+}

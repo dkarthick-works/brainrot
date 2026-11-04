@@ -1,0 +1,13 @@
+auth {
+  mode: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  `token` is either a Clerk session JWT (expires in ~60s) or an `fc_` API key (long-lived).
+  Easiest: paste a Clerk JWT into `clerkToken`, run "API keys / Create API key" once; it stores the new key in `token`.
+  API-key endpoints always use `clerkToken`, because an API key can't manage keys.
+}

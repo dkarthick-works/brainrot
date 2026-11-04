@@ -1,0 +1,21 @@
+meta {
+  name: Review card
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/cards/{{cardId}}/review
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "quality": 4
+  }
+}
+
+docs {
+  Quality 0-5. UI buttons: Again=1, Hard=3, Good=4, Easy=5.
+}

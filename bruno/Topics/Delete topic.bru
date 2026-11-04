@@ -1,0 +1,15 @@
+meta {
+  name: Delete topic
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/topics/{{topicId}}
+  body: none
+  auth: inherit
+}
+
+docs {
+  409 if the topic still has cards, or if it is the default topic.
+}
