@@ -10,9 +10,12 @@ export const GRADES = [
 
 /** Days until the card returns if graded `q`. Mirrors Sm2.java; used only for the button hints. */
 export function nextInterval(c: Pick<Card, 'repetitions' | 'interval' | 'easeFactor'>, q: number) {
-  if (q < 3 || c.repetitions === 0) return 1
-  if (c.repetitions === 1) return 6
-  return Math.round(c.interval * c.easeFactor)
+  if (q < 3) return 1
+  if (c.repetitions === 0) return q === 3 ? 1 : q === 4 ? 2 : 4
+  const hard = Math.max(c.interval + 1, Math.round(c.interval * 1.2))
+  const good = Math.max(hard + 1, Math.round(c.interval * c.easeFactor))
+  const easy = Math.max(good + 1, Math.round(c.interval * c.easeFactor * 1.3))
+  return q === 3 ? hard : q === 4 ? good : easy
 }
 
 /** "in 40m", "in 3h", "tomorrow", "in 5 days" (Brain Upgraded) */
