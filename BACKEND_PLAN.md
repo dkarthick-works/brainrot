@@ -83,13 +83,17 @@ The raw key looks like `fc_<32 random bytes base64url>`. It is shown once at cre
 
 ## 3. SM-2 algorithm
 
-This is one pure static function, `Sm2.review(card, quality, now)`, which returns the updated card. Quality is an integer from 0 to 5 (classic SM-2).
+`Sm2.review(card, quality, now)` mutates the card using SM-2 ease updates and grade-specific intervals. Quality is an integer from 0 to 5. The frontend mirrors the interval rules in `frontend/src/logic.ts` for button hints.
 
 ```
 if quality >= 3:
-    if repetitions == 0: interval = 1
-    elif repetitions == 1: interval = 6
-    else: interval = round(interval * easeFactor)
+    if repetitions == 0:
+        interval = {3: 1, 4: 2, 5: 4}[quality]
+    else:
+        hard = max(interval + 1, round(interval * 1.2))
+        good = max(hard + 1, round(interval * easeFactor))
+        easy = max(good + 1, round(interval * easeFactor * 1.3))
+        interval = {3: hard, 4: good, 5: easy}[quality]
     repetitions += 1
 else:
     repetitions = 0

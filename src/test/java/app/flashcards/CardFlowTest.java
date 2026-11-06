@@ -62,7 +62,7 @@ class CardFlowTest {
         mvc.perform(get("/api/cards/due").with(as(bob))).andExpect(jsonPath("$.dueCount").value(0));
 
         mvc.perform(json(post("/api/cards/" + id + "/review"), "{\"quality\":4}").with(as(alice)))
-                .andExpect(jsonPath("$.interval").value(1));
+                .andExpect(jsonPath("$.interval").value(2));
         mvc.perform(json(post("/api/cards/" + id + "/review"), "{\"quality\":9}").with(as(alice)))
                 .andExpect(status().isBadRequest());
         mvc.perform(get("/api/cards/due").with(as(alice)))
