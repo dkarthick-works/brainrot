@@ -1,5 +1,6 @@
 .count {
-  margin-top: 40px;
+  margin-top: 32px;
+  flex-shrink: 0;
   font-size: 13px;
   color: var(--muted);
 }
@@ -11,13 +12,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 72px 16px 0;
+  padding: 68px 16px 0;
 }
 .stack {
   position: relative;
-  width: min(100%, 380px);
-  aspect-ratio: 3 / 4;
-  max-height: 62dvh;
+  width: min(100%, 640px);
+  flex: 1;
+  min-height: 0;
+  max-height: 800px;
 }
 .card {
   position: absolute;
@@ -80,13 +82,46 @@
   color: var(--muted);
 }
 
+/* Study-only layout: keep edit-dialog faces unchanged. The topic and hint
+   stay outside the scrolling text, so long content never covers them. */
+.stack .card { touch-action: pan-y; }
+.stack .face {
+  padding: 20px clamp(20px, 4vw, 36px);
+  justify-content: flex-start;
+  text-align: left;
+  overflow: hidden;
+}
+.stack .topic, .stack .hint {
+  position: static;
+  flex-shrink: 0;
+}
+.card-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+.card-content-inner {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+.stack .face p {
+  text-wrap: wrap;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* Difficulty buttons */
 /* One segmented bar: shared outline, hairline dividers, no gaps */
 .grades {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  width: min(100% - 32px, 380px);
-  margin: 24px auto calc(24px + env(safe-area-inset-bottom));
+  width: min(100% - 32px, 640px);
+  flex-shrink: 0;
+  margin: 16px auto calc(16px + env(safe-area-inset-bottom));
   border: 1px solid var(--line);
   border-radius: 18px;
   background: var(--card);

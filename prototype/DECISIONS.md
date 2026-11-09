@@ -20,6 +20,7 @@ The prototype is for settling the design only. It has no code-level impact on th
 
 ## Play Screen (first screen after login) — 🔒 locked 2026-11-05
 - Due cards are shown as a stack, with the next two peeking out behind the top card.
+- **Study-card layout update (user approved):** question and answer text, including the question reference on the answer face, are left-aligned. Study cards use more available viewport height and expand up to 640px wide, with the difficulty bar matching their width. Long content scrolls within either face; the topic and flip/grade hint remain visible. Preserve line breaks and wrap long strings. Vertical scrolling must not flip or dismiss the card. This update does not change the Cards screen's editing dialog.
 - Tapping a card flips it to show the answer, with the question shown small above.
 - Difficulty buttons appear after the flip: Again / Hard / Good / Easy, with quality values Again=1, Hard=3, Good=4, Easy=5 (matching `Sm2.java`). Each button shows when the card would come back.
 - Swiping is locked until the card is flipped **and** a difficulty is picked. A locked card only budges slightly when dragged, then snaps back. The back of the card says "Pick a difficulty" until one is chosen.

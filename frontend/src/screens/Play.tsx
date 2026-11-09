@@ -147,6 +147,8 @@ function Stack({ queue, topicName, counter, menuOpen, onGraded }: StackProps) {
   const [dx, setDx] = useState(0)
   const [exit, setExit] = useState(0)
   const startX = useRef<number | null>(null)
+  const startY = useRef(0)
+  const verticalDrag = useRef(false)
   const top = queue[0]
   // Swipe unlocks only after the card is flipped and a difficulty is picked. The review is sent on swipe.
   const canSwipe = flipped && grade != null
@@ -203,15 +205,30 @@ function Stack({ queue, topicName, counter, menuOpen, onGraded }: StackProps) {
                   tabIndex: 0,
                   'aria-label': flipped ? 'Answer shown. Tap to show question' : 'Tap to reveal answer',
                   onPointerDown: e => {
+                    if (!e.isPrimary || e.button !== 0) return
                     startX.current = e.clientX
+                    startY.current = e.clientY
+                    verticalDrag.current = false
                     e.currentTarget.setPointerCapture(e.pointerId)
                   },
-                  onPointerMove: e => startX.current != null && setDx(e.clientX - startX.current),
-                  onPointerUp: () => {
+                  onPointerMove: e => {
+                    if (startX.current == null) return
+                    const deltaX = e.clientX - startX.current
+                    const deltaY = e.clientY - startY.current
+                    if (Math.abs(deltaY) > 6 && Math.abs(deltaY) > Math.abs(deltaX)) {
+                      verticalDrag.current = true
+                    }
+                    setDx(verticalDrag.current ? 0 : deltaX)
+                  },
+                  onPointerUp: e => {
+                    if (startX.current == null) return
+                    const deltaX = e.clientX - startX.current
+                    const deltaY = e.clientY - startY.current
                     startX.current = null
-                    if (canSwipe && Math.abs(dx) > 100) return advance(Math.sign(dx))
-                    if (Math.abs(dx) < 6) setFlipped(f => !f)
                     setDx(0)
+                    if (verticalDrag.current || Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) >= 6) return
+                    if (canSwipe && Math.abs(deltaX) > 100) return advance(Math.sign(deltaX))
+                    if (Math.abs(deltaX) < 6 && Math.abs(deltaY) < 6) setFlipped(f => !f)
                   },
                   onPointerCancel: () => {
                     startX.current = null
@@ -222,13 +239,19 @@ function Stack({ queue, topicName, counter, menuOpen, onGraded }: StackProps) {
                 <div className="card-inner">
                   <section className="face front">
                     <span className="topic">{topicName(c.topicId)}</span>
-                    <p>{c.question}</p>
+                    <div className="card-content">
+                      <div className="card-content-inner"><p>{c.question}</p></div>
+                    </div>
                     <span className="hint">Tap to reveal</span>
                   </section>
                   <section className="face back">
                     <span className="topic">{topicName(c.topicId)}</span>
-                    <p className="q-small">{c.question}</p>
-                    <p>{c.answer}</p>
+                    <div className="card-content">
+                      <div className="card-content-inner">
+                        <p className="q-small">{c.question}</p>
+                        <p>{c.answer}</p>
+                      </div>
+                    </div>
                     {isTop && (
                       <span className="hint">
                         {grade == null ? 'Pick a difficulty' : `Marked ${GRADES.find(g => g.quality === grade)?.label}. Swipe for next`}
