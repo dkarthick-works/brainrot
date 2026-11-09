@@ -17,21 +17,23 @@
 
 /* Edit-card dialog: just the flashcard and the buttons, no sheet behind them */
 .sheet.edit {
-  width: min(100% - 32px, 380px);
+  width: min(100% - 32px, 640px);
   padding: 0;
   border: 0;
   background: none;
   box-shadow: none;
   overflow: visible;
 }
-.edit-stack { position: relative; aspect-ratio: 3 / 4; max-height: 70dvh; margin: 0 auto; }
+.edit-stack {
+  position: relative;
+  height: min(800px, calc(100dvh - 64px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  margin: 0 auto;
+}
 /* Inside the edit card: buttons pinned to the bottom, hint and topic picker stacked above them */
 /* Buttons fill the card's bottom edge: no gap, no margin, corners follow the card */
 .card-actions {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  flex-shrink: 0;
+  margin: 0 -24px;
   gap: 0;
   border-top: 1px solid var(--line);
   border-radius: 0 0 24px 24px;
@@ -39,20 +41,35 @@
 }
 .card-actions button { height: 56px; border: 0; border-radius: 0; }
 .card-actions button:first-child { background: none; }
-.edit-card .hint { bottom: 72px; }
-.edit-card .face { padding: 56px 24px 150px; justify-content: flex-start; } /* text starts near the top, leaving room to type */
+.edit-card .hint {
+  position: static;
+  flex-shrink: 0;
+}
+.edit-card .face {
+  padding: 24px 24px 0;
+  justify-content: flex-start;
+  text-align: left;
+  overflow: hidden;
+}
+.edit-card .topic {
+  position: static;
+  flex-shrink: 0;
+}
 .edit-card { user-select: auto; touch-action: auto; cursor: pointer; }
 /* Topic picker: pill near the bottom of the card front, custom chevron with room to breathe */
 .topic-pick {
-  position: absolute;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  align-self: center;
+  flex-shrink: 0;
+  max-width: 100%;
   display: flex;
   align-items: center;
 }
 .topic-pick select {
   appearance: none;
+  max-width: 100%;
+  min-width: 0;
+  text-overflow: ellipsis;
   font: inherit;
   font-size: 12px;
   letter-spacing: 0.08em;
@@ -83,8 +100,13 @@
   font-size: 22px;
   font-weight: 500;
   line-height: 1.35;
-  text-align: center;
+  text-align: left;
   color: var(--ink);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  overflow-wrap: anywhere;
   resize: none;
   padding: 8px;
   cursor: text;

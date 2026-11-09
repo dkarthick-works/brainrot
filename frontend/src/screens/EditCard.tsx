@@ -46,7 +46,6 @@ export default function EditCard({ card, topics, onSave, onCancel }: Props) {
             </section>
             <section className="face back" aria-hidden={!flipped}>
               <span className="topic">Answer</span>
-              <p className="q-small">{draft.question}</p>
               <textarea className="face-field" value={draft.answer} onChange={set('answer')} aria-label="Answer" placeholder="Answer" rows={4} maxLength={5000} tabIndex={flipped ? 0 : -1} />
               <button type="button" className="hint flip" onClick={() => setFlipped(false)} tabIndex={flipped ? 0 : -1}>Tap card to edit question</button>
               {actions(flipped)}
