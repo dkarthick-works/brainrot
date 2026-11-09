@@ -28,6 +28,8 @@ spring:
 app:
   clerk-issuer: ${CLERK_ISSUER:https://right-perch-3118.clerk.accounts.dev}
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:8089,http://localhost:8088} # Vite dev server, bundled app. Also checked against the Clerk token azp
+  # Public URL of the MCP endpoint, exactly as registered in Clerk (Agents -> MCP servers). OAuth tokens must carry it as aud
+  mcp-resource-url: ${MCP_RESOURCE_URL:http://localhost:8088/mcp}
 
 management:
   endpoints:

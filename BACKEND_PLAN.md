@@ -175,6 +175,17 @@ Clerk session JWTs expire after about 60 seconds, so they are unusable in an age
     "headers": { "Authorization": "Bearer fc_..." } } } }
 ```
 
+Clients that can't send a static header (claude.ai and ChatGPT connectors) use **OAuth** instead: the user signs in with Clerk and approves access, and the client gets an access token for `/mcp`. Clerk is the authorization server: login, consent, PKCE, client registration (CIMD, optionally DCR) and token issuing. The backend only publishes where to sign in and validates the tokens (§6). Client config is just the URL:
+
+```json
+{ "mcpServers": { "flashcards": { "type": "http", "url": "https://<host>/mcp" } } }
+```
+
+Clerk dashboard setup, per instance (dev and production separately):
+1. **Agents → MCP servers → Add MCP server** with the exact `MCP_RESOURCE_URL`. This turns on the `aud` claim; without it tokens are rejected.
+2. Select **Allow public clients to connect** (CIMD). Enable **Dynamic client registration** only if a client can't use CIMD: it opens an unauthenticated registration endpoint.
+3. Set default scopes `profile email` for clients that register without asking for any.
+
 **Resolved:** on a servlet app Spring AI sets `immediateExecution(true)`, and the stateless transport handles each call synchronously, so tools run on the request thread and read `userId` from `SecurityContextHolder`. Covered by `CardFlowTest.apiKeysAndMcp`.
 
 ---
@@ -186,13 +197,15 @@ One `SecurityFilterChain`:
 - `/actuator/health` is public. Everything else is authenticated.
 - **Clerk JWT:** a `JwtDecoder` bean uses `${CLERK_ISSUER}/.well-known/jwks.json` (fetched lazily, so startup doesn't need Clerk) and validates the issuer plus `azp` against `ALLOWED_ORIGINS`, as Clerk recommends. A token without `azp` passes.
 - **API key:** `ApiKeyFilter` runs before `BearerTokenAuthenticationFilter`. If the bearer token starts with `fc_`, it hashes the token, looks up `api_keys`, sets an `Authentication` whose principal is the `userId`, and updates `lastUsedAt`.
+- **Clerk OAuth access token (MCP only):** Clerk issues these as JWTs signed with the same JWKS, marked with header `typ: at+jwt`. The `JwtDecoder` routes on that header: `at+jwt` tokens are checked for issuer, expiry and `aud` = `${MCP_RESOURCE_URL}`; anything else goes to the session validator, which rejects `at+jwt`. OAuth tokens become a `UsernamePasswordAuthenticationToken` with the `MCP_OAUTH` authority, not a `JwtAuthenticationToken`, so they are refused on `/api/**` (403) and can't manage API keys. No scope is required: the audience check is what ties a token to us.
+- **Discovery (RFC 9728):** Spring Security serves `/.well-known/oauth-protected-resource/mcp` with `resource` = `${MCP_RESOURCE_URL}` and `authorization_servers` = [`${CLERK_ISSUER}`]. Every 401 carries `WWW-Authenticate: Bearer resource_metadata="…"` pointing at it. Both URLs come from config, not the request, because the app sits behind Coolify's proxy.
 - A custom `BearerTokenResolver` returns `null` for `fc_` tokens so the JWT decoder never tries to parse them.
-- `SecurityConfig.userId()` is `authentication.getName()`: the JWT `sub`, or the API key's `userId`.
+- `SecurityConfig.userId()` is `authentication.getName()`: the JWT `sub` (session or OAuth), or the API key's `userId`.
 - CORS: allow `${ALLOWED_ORIGINS}`.
 - Error dispatches are permitted so a real error isn't masked as 401. Errors are `ProblemDetail` via `ResponseStatusException` (`spring.mvc.problemdetails.enabled`).
 - Sessions are stateless and CSRF is disabled (bearer-only API).
 
-API-key creation and revocation require a Clerk JWT, so an API key cannot mint more API keys.
+API-key creation and revocation require a Clerk session JWT, so neither an API key nor an OAuth token can mint API keys.
 
 ---
 
@@ -216,10 +229,11 @@ src/main/java/app/flashcards/
   CardController.java  // /api/cards, /api/topics
   ApiKeyController.java// /api/api-keys (hashing inline)
   CardTools.java       // MCP tools -> CardService
-  SecurityConfig.java  // chain, ApiKeyFilter, BearerTokenResolver, azp validator, CORS, userId()
+  SecurityConfig.java  // chain, ApiKeyFilter, BearerTokenResolver, session/OAuth JWT routing, resource metadata, CORS, userId()
 src/test/java/app/flashcards/
   Sm2Test.java         // pure unit test of the algorithm table
   CardFlowTest.java    // Testcontainers: cursor paging; API keys + MCP tools/call; create -> due -> review -> no longer due; dedupe; cross-user 404; delete non-empty topic -> 409; move-cards skips duplicates
+  OAuthMcpTest.java    // real JWT decoding against a local JWKS: resource metadata + 401 challenge; OAuth token on MCP; OAuth refused on /api; bad aud/iss/key/expiry; session tokens unchanged
 ```
 
 ---
@@ -233,6 +247,7 @@ See `src/main/resources/application.yml`. Env vars:
 | `MONGODB_URI` | `mongodb://localhost:27018/flashcards` | Coolify MongoDB internal URI |
 | `CLERK_ISSUER` | `https://right-perch-3118.clerk.accounts.dev` | Clerk production instance URL |
 | `ALLOWED_ORIGINS` | `http://localhost:8089` | frontend URL(s), comma-separated |
+| `MCP_RESOURCE_URL` | `http://localhost:8088/mcp` | `https://brainrot.deeka.work/mcp`, exactly as registered in Clerk |
 | `PORT` | `8088` | `8088` |
 
 ---
@@ -245,19 +260,20 @@ Coolify setup:
 
 - Point Coolify at the repo using the Dockerfile build pack, with "Ports Exposes" set to `8088`. Do not map a host port: Coolify's proxy routes by domain.
 - Add a MongoDB resource in Coolify and use its internal URI as `MONGODB_URI`.
-- Set `CLERK_ISSUER` and `ALLOWED_ORIGINS`.
+- Set `CLERK_ISSUER`, `ALLOWED_ORIGINS` and `MCP_RESOURCE_URL`.
 - Health check path: `/actuator/health`.
 
 ---
 
 ## 10. Status
 
-Steps 1–6 are done: scaffold, model + SM-2, service + controllers, security, API keys + MCP, tests (`./mvnw test`, 7 passing). The Docker image builds and runs healthy locally.
+Steps 1–6 are done: scaffold, model + SM-2, service + controllers, security, API keys + MCP, MCP OAuth, tests (`./mvnw test`, 13 passing). The Docker image builds and runs healthy locally.
 
 Remaining:
 
 - Manual check with a real Clerk token once the frontend exists.
 - Connect Claude Code to `/mcp` with an API key.
+- MCP OAuth: do the Clerk dashboard setup (§5) and sign in from a real client (Claude Code locally, then claude.ai against production).
 - Deploy to Coolify.
 
 Run locally:
@@ -272,5 +288,4 @@ JAVA_HOME=/opt/homebrew/opt/openjdk@25 ./mvnw spring-boot:run   # API + MCP on 8
 ## Deliberately skipped (add when needed)
 
 - **New-cards-per-day limit.** Agents can push hundreds of cards, and all of them land as due today. Add an Anki-style "max N new/day" if the landing queue becomes overwhelming. It's a filter in `CardService.due()`.
-- **MCP OAuth (spec auth flow).** Add it only if a client (for example claude.ai custom connectors) refuses header-based bearer auth.
 - **Rate limiting, review history/stats collection, card import/export, soft delete.**
