@@ -1,0 +1,35 @@
+flowchart LR
+    Browser["React PWA browser"]
+    Agent["HTTP MCP client"]
+    Script["REST script"]
+    Clerk["Clerk identity and JWKS"]
+    subgraph Server["Spring Boot WebMVC process"]
+        Static["WebApp: bundled static assets"]
+        Security["SecurityConfig: bearer auth and CORS"]
+        Rest["CardController: /api cards and topics"]
+        Keys["ApiKeyController: /api/api-keys"]
+        MCP["Spring AI: POST /mcp, SYNC STATELESS"]
+        Tools["CardTools: seven tools"]
+        Service["CardService: validation and ownership"]
+        SM2["Sm2: review intervals"]
+        Mongo["MongoTemplate"]
+    end
+    DB[("MongoDB: cards, topics, api_keys")]
+    Browser -->|"shell assets, Docker packaging"| Static
+    Browser -->|"sign-in and session token"| Clerk
+    Agent -.->|"OAuth sign-in when supported"| Clerk
+    Browser -->|"REST with session JWT"| Security
+    Script -->|"REST with fc_ key or session JWT"| Security
+    Agent -->|"MCP with key, session or OAuth token"| Security
+    Security -->|"lazy signature key lookup"| Clerk
+    Security -->|"key hash lookup and lastUsedAt"| Mongo
+    Security -->|"session or API key"| Rest
+    Security -->|"session only"| Keys
+    Security -->|"all accepted credential kinds"| MCP
+    MCP --> Tools
+    Rest --> Service
+    Tools --> Service
+    Service --> SM2
+    Service --> Mongo
+    Keys --> Mongo
+    Mongo --> DB
