@@ -1,25 +1,5 @@
 # Backlog
 
-## MCP OAuth (after v1)
-
-v1 ships with API keys (`fc_...` in the agent's `Authorization` header). Add OAuth when a client needs it. claude.ai web/mobile connectors and ChatGPT connectors probably don't accept a static header; confirm for each client you plan to use.
-
-Nothing in the data model, tools or REST API changes, because everything resolves the user through `SecurityConfig.userId()`. API keys stay for scripts and cron.
-
-### Steps
-1. **Clerk dashboard:** enable OAuth applications and Dynamic Client Registration. No code.
-2. **`GET /.well-known/oauth-protected-resource`** (RFC 9728): JSON with `resource` = `https://<host>/mcp` and `authorization_servers` = [Clerk issuer]. First check whether Spring Security or `spring-ai-community/mcp-security` provides this.
-3. **401 on `/mcp` without a token:** a custom `AuthenticationEntryPoint` that sends `WWW-Authenticate: Bearer resource_metadata="https://<host>/.well-known/oauth-protected-resource"`.
-4. **Accept Clerk OAuth access tokens:** validate the audience (the token must be issued for our `/mcp` resource) and map `sub` to `userId`.
-
-### Open question to resolve first
-Are Clerk OAuth access tokens JWTs or opaque strings?
-- **JWT:** the existing JWT decoder handles them; add the audience validator.
-- **Opaque:** use Spring's opaque-token introspection against Clerk, plus an `AuthenticationManagerResolver` that routes each token by its shape (`fc_` key, Clerk JWT, or OAuth token). About 30 extra lines.
-
-### Effort
-Half a day to a day, about 50–100 lines. Most of the time goes into testing with real clients (Claude Code, claude.ai connector).
-
 ## Delete user data when a Clerk account is deleted
 
 Users delete their account from Clerk's profile screen (Settings → Manage account). That only removes the Clerk login: the backend has no user-deletion path, so the user's cards, topics and API keys stay in MongoDB. That leaves orphaned personal data behind, and in-app account deletion is required for App Store apps with sign-up.
