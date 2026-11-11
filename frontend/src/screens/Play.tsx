@@ -284,7 +284,6 @@ function Stack({ queue, topicName, counter, menuOpen, onGraded }: StackProps) {
                     <span className="topic">{topicName(c.topicId)}</span>
                     <div className="card-content">
                       <div className="card-content-inner">
-                        <p className="q-small">{c.question}</p>
                         <p>{c.answer}</p>
                       </div>
                     </div>

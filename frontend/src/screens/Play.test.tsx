@@ -50,6 +50,15 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('Home scheduled-review navigation safety', () => {
+  it('shows only the answer text on the back of a study card', async () => {
+    vi.mocked(api.due).mockResolvedValueOnce({ cards: [a], dueCount: 1, nextDueAt: null })
+    const { container } = setup()
+    await loaded()
+    key('Enter')
+    expect(container.querySelector('.front .card-content')?.textContent).toBe(a.question)
+    expect(container.querySelector('.back .card-content')?.textContent).toBe(a.answer)
+  })
+
   it('waits for final POST and authoritative refill before offering Freestyle', async () => {
     const post = deferred<Card>()
     vi.mocked(api.due).mockResolvedValueOnce({ cards: [a], dueCount: 1, nextDueAt: null })
@@ -141,7 +150,7 @@ describe('Home scheduled-review navigation safety', () => {
     // Even though an old snapshot is available, only this new GET may decide the queue.
     vi.mocked(api.due).mockReset().mockResolvedValue({ cards: [b], dueCount: 1, nextDueAt: null })
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Retry scheduled review: Question a' })) })
-    await waitFor(() => expect(screen.getAllByText('Question b')).toHaveLength(2))
+    await waitFor(() => expect(screen.getAllByText('Question b')).toHaveLength(1))
     expect(screen.queryByText('Question a')).toBeNull()
     expect(screen.getByText('1 / 1')).toBeTruthy()
   })
@@ -155,8 +164,8 @@ describe('Home scheduled-review navigation safety', () => {
     await loaded()
     await act(async () => { first.reject(new Error('first failed')) })
     expect(writes.failures).toHaveLength(2)
-    expect(screen.getAllByText('Question a')).toHaveLength(2)
-    expect(screen.getAllByText('Question b')).toHaveLength(2)
+    expect(screen.getAllByText('Question a')).toHaveLength(1)
+    expect(screen.getAllByText('Question b')).toHaveLength(1)
     expect(screen.getByText('1 / 2')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Freestyle' })).toBeNull()
   })

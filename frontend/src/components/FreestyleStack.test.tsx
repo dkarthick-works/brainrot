@@ -35,6 +35,8 @@ describe('Freestyle gestures', () => {
     expect(view.container.querySelector('.back')?.getAttribute('aria-hidden')).toBe('true')
     pointer(top, 'down'); pointer(top, 'up')
     expect(screen.getByRole('button').getAttribute('aria-label')).toContain('Answer shown')
+    expect(view.container.querySelector('.front .card-content')?.textContent).toBe(cards[0].question)
+    expect(view.container.querySelector('.back .card-content')?.textContent).toBe(cards[0].answer)
     pointer(top, 'down'); pointer(top, 'up')
     expect(screen.getByRole('button').getAttribute('aria-label')).toBe('Tap to reveal answer')
     fireEvent.keyDown(top, { key: 'Enter' })

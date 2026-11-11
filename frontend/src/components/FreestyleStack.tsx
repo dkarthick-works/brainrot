@@ -116,7 +116,7 @@ function StackCard({ queue, topicName, counter, suspended, onAdvance }: Props) {
             </section>
             <section className="face back" aria-hidden={!top || !flipped}>
               {topic && <span className="topic">{topic}</span>}
-              <div className="card-content"><div className="card-content-inner"><p className="q-small">{card.question}</p><p>{card.answer}</p></div></div>
+              <div className="card-content"><div className="card-content-inner"><p>{card.answer}</p></div></div>
               <span className="hint">Tap for question · Swipe to continue</span>
             </section>
           </div>
