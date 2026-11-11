@@ -1,10 +1,10 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { api, topicsQuery } from '../api'
 import ErrorState from '../components/ErrorState'
 import Loading from '../components/Loading'
-import { showSaveError } from '../components/SaveError'
+import { newReviewSessionId, useReviewWrites } from '../components/ReviewWrites'
 import { earliest, GRADES, nextInterval, shouldPrefetch, unseen, untilLabel } from '../logic'
 import type { Card } from '../types'
 
@@ -14,25 +14,68 @@ type Session = {
   total: number // dueCount at session start, for "position / total"
   dueCount: number // from the latest /cards/due response
   nextDueAt: string | null // soonest future dueAt, from the server and from cards graded here
-  reviewed: number[] // qualities graded this session
   exhausted: boolean // the last fetch added nothing new
 }
 
 export default function Play({ menuOpen }: { menuOpen: boolean }) {
   const navigate = useNavigate()
-  const qc = useQueryClient()
+  const writes = useReviewWrites()
+  const [sessionId] = useState(newReviewSessionId)
+  const handled = useRef(new Set<string>())
+  const foreignSuccesses = useRef(new Set(writes.submissions.filter(r => r.status === 'succeeded').map(r => `${r.id}:${r.attemptId}`)))
+  const mounted = useRef(false)
+  const fetchToken = useRef(0)
+  const fetchBusy = useRef(false)
+  useEffect(() => {
+    mounted.current = true
+    return () => { mounted.current = false; fetchToken.current++; fetchBusy.current = false }
+  }, [])
   const topics = useQuery(topicsQuery)
   const [s, setS] = useState<Session | null>(null)
   const [fetching, setFetching] = useState(false)
   const [error, setError] = useState<unknown>(null)
-  // Reviews still being sent. Fetching waits for them, so a batch never refills with cards already graded here.
-  const [inflight, setInflight] = useState(0)
+  const sessionWrites = writes.submissions.filter(r => r.sessionId === sessionId)
+  const reviewed = sessionWrites.filter(r => r.status === 'pending' || r.status === 'succeeded').map(r => r.quality)
+
+  // Foreign successes trigger an authoritative reload, never apply their old card snapshot
+  // or summary to this session (e.g. retrying an earlier Home failure from the notice).
+  useEffect(() => {
+    const fresh = writes.submissions.filter(r => r.sessionId !== sessionId && r.status === 'succeeded' && !foreignSuccesses.current.has(`${r.id}:${r.attemptId}`))
+    for (const r of fresh) foreignSuccesses.current.add(`${r.id}:${r.attemptId}`)
+    if (fresh.length && s) {
+      fetchToken.current++
+      fetchBusy.current = false
+      setFetching(false)
+      setError(null)
+      setS(null)
+    }
+  })
+
+  // Each attempt/status is reconciled once, and only into its originating Home session.
+  useEffect(() => {
+    for (const r of sessionWrites) {
+      const key = `${r.id}:${r.attemptId}:${r.status}`
+      if (handled.current.has(key)) continue
+      handled.current.add(key)
+      setS(p => {
+        if (!p) return p
+        if (r.status === 'failed') return { ...p, queue: p.queue.some(c => c.id === r.card.id) ? p.queue : [...p.queue, r.card] }
+        if (r.status === 'pending') return { ...p, queue: p.queue.filter(c => c.id !== r.card.id) }
+        if (r.status === 'succeeded') return { ...p, queue: p.queue.filter(c => c.id !== r.card.id), nextDueAt: earliest(p.nextDueAt, r.result?.dueAt ?? null) }
+        return p
+      })
+    }
+  })
 
   async function fetchBatch() {
+    if (fetchBusy.current || writes.pending > 0) return
+    fetchBusy.current = true
+    const token = ++fetchToken.current
     setFetching(true)
     setError(null)
     try {
       const d = await api.due()
+      if (!mounted.current || token !== fetchToken.current) return
       setS(prev => {
         const fresh = unseen(d.cards, prev?.seen ?? new Set())
         const queue = [...(prev?.queue ?? []), ...fresh]
@@ -42,41 +85,24 @@ export default function Play({ menuOpen }: { menuOpen: boolean }) {
           total: prev?.total ?? d.dueCount,
           dueCount: d.dueCount,
           nextDueAt: earliest(d.nextDueAt, prev?.nextDueAt),
-          reviewed: prev?.reviewed ?? [],
           exhausted: fresh.length === 0,
         }
       })
     } catch (e) {
-      setError(e)
+      if (mounted.current && token === fetchToken.current) setError(e)
     } finally {
-      setFetching(false)
+      if (mounted.current && token === fetchToken.current) {
+        fetchBusy.current = false
+        setFetching(false)
+      }
     }
   }
 
   // First batch on mount; afterwards prefetch when 5 or fewer remain and the server says more are due
   const needMore = !s || (!s.exhausted && shouldPrefetch(s.queue.length, s.dueCount))
   useEffect(() => {
-    if (needMore && !fetching && !error && inflight === 0) fetchBatch()
+    if (needMore && !fetchBusy.current && !error && writes.pending === 0) fetchBatch()
   })
-
-  function review(card: Card, quality: number) {
-    setInflight(n => n + 1)
-    api.review(card.id, quality).finally(() => setInflight(n => n - 1)).then(
-      updated => {
-        setS(p => p && { ...p, nextDueAt: earliest(p.nextDueAt, updated.dueAt) })
-        qc.invalidateQueries({ queryKey: ['cards'] })
-        qc.invalidateQueries({ queryKey: ['topics'] })
-      },
-      () => {
-        // Undo: the card comes back to the end of the stack, ungraded
-        setS(p => p && { ...p, queue: [...p.queue, card], reviewed: p.reviewed.slice(0, -1) })
-        showSaveError(() => {
-          setS(p => p && { ...p, queue: p.queue.filter(c => c.id !== card.id), reviewed: [...p.reviewed, quality] })
-          review(card, quality)
-        })
-      },
-    )
-  }
 
   if (!s) {
     return (
@@ -89,8 +115,10 @@ export default function Play({ menuOpen }: { menuOpen: boolean }) {
   const top = s.queue[0]
   if (!top) {
     if (error) return <main className="stage"><ErrorState variant="full" error={error} onRetry={fetchBatch} /></main>
-    if (needMore || fetching || topics.isPending) return <main className="stage"><Loading variant="full" /></main>
-    const brandNew = s.reviewed.length === 0 && topics.data?.every(t => t.cardCount === 0)
+    if (needMore || fetching || writes.pending > 0 || topics.isPending) return <main className="stage"><Loading variant="full" /></main>
+    if (writes.failures.length) return <main className="stage"><p>Resolve the unsaved scheduled reviews to finish.</p></main>
+    if (!reviewed.length && !topics.data) return <main className="stage"><ErrorState variant="full" error={topics.error} onRetry={() => { void topics.refetch() }} /></main>
+    const brandNew = reviewed.length === 0 && topics.data?.every(t => t.cardCount === 0)
     return (
       <main className="stage">
         {brandNew ? (
@@ -106,27 +134,29 @@ export default function Play({ menuOpen }: { menuOpen: boolean }) {
           <div className="done">
             <h1>Brain Upgraded</h1>
             <p>{s.nextDueAt ? `Next card due ${untilLabel(s.nextDueAt)}.` : 'Nothing else is scheduled.'}</p>
-            {s.reviewed.length > 0 && (
+            {reviewed.length > 0 && (
               <p className="done-stats">
-                {s.reviewed.length} reviewed · {s.reviewed.filter(q => q >= 4).length} Good or Easy
+                {reviewed.length} reviewed · {reviewed.filter(q => q >= 4).length} Good or Easy
               </p>
             )}
+            <div className="done-actions"><button className="primary" onClick={() => navigate('/freestyle')}>Freestyle</button></div>
           </div>
         )}
       </main>
     )
   }
 
-  const position = s.reviewed.length + 1
+  const position = reviewed.length + 1
   return (
     <Stack
+      key={top.id}
       queue={s.queue}
       topicName={id => topics.data?.find(t => t.id === id)?.name ?? ''}
       counter={`${position} / ${Math.max(s.total, position + s.queue.length - 1)}`}
       menuOpen={menuOpen}
       onGraded={quality => {
-        setS(p => p && { ...p, queue: p.queue.slice(1), reviewed: [...p.reviewed, quality] })
-        review(top, quality)
+        const id = writes.submit(sessionId, top, quality)
+        if (id) setS(p => p && { ...p, queue: p.queue.filter(c => c.id !== top.id) })
       }}
     />
   )
@@ -140,7 +170,7 @@ type StackProps = {
   onGraded: (quality: number) => void
 }
 
-/** The top card plus two peeking behind. Stays mounted across cards so the next one slides forward. */
+/** The top card plus two peeking behind. A new top resets interaction and cancels old timers. */
 function Stack({ queue, topicName, counter, menuOpen, onGraded }: StackProps) {
   const [flipped, setFlipped] = useState(false)
   const [grade, setGrade] = useState<number | null>(null)
@@ -149,14 +179,20 @@ function Stack({ queue, topicName, counter, menuOpen, onGraded }: StackProps) {
   const startX = useRef<number | null>(null)
   const startY = useRef(0)
   const verticalDrag = useRef(false)
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (exitTimer.current) clearTimeout(exitTimer.current) }, [])
+  useEffect(() => {
+    if (menuOpen) { startX.current = null; setDx(0) }
+  }, [menuOpen])
   const top = queue[0]
   // Swipe unlocks only after the card is flipped and a difficulty is picked. The review is sent on swipe.
   const canSwipe = flipped && grade != null
 
   function advance(dir: number) {
-    if (!canSwipe || exit) return
+    if (!canSwipe || exitTimer.current || menuOpen) return
     setExit(dir)
-    setTimeout(() => {
+    exitTimer.current = setTimeout(() => {
+      exitTimer.current = null
       onGraded(grade!)
       setFlipped(false)
       setGrade(null)
@@ -167,7 +203,7 @@ function Stack({ queue, topicName, counter, menuOpen, onGraded }: StackProps) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (menuOpen || exit || (e.target as HTMLElement).closest('dialog, input, textarea')) return
+      if (menuOpen || exit || (e.target as HTMLElement).closest('dialog, input, textarea, button, a')) return
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
         setFlipped(f => !f)
@@ -205,7 +241,7 @@ function Stack({ queue, topicName, counter, menuOpen, onGraded }: StackProps) {
                   tabIndex: 0,
                   'aria-label': flipped ? 'Answer shown. Tap to show question' : 'Tap to reveal answer',
                   onPointerDown: e => {
-                    if (!e.isPrimary || e.button !== 0) return
+                    if (menuOpen || exitTimer.current || !e.isPrimary || e.button !== 0) return
                     startX.current = e.clientX
                     startY.current = e.clientY
                     verticalDrag.current = false

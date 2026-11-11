@@ -20,7 +20,7 @@ A web app installable as a PWA, built from the locked design in `prototype/`. Th
 | Styling | Plain CSS with the prototype's CSS variables (one `tokens.css`, plus one CSS file per screen) |
 | Components | Hand-built; native `<dialog>` for modals; no UI library |
 | PWA | `vite-plugin-pwa` |
-| Tests | Vitest (logic), one Playwright smoke test (main flow) |
+| Tests | Vitest (logic + jsdom/Testing Library components), Playwright Chromium with test-only auth; real authenticated smoke remains manual |
 
 Not used: Next.js (no server rendering needed behind a login), shadcn (the warm palette replaced the black/white/grey look it was chosen for).
 
@@ -51,6 +51,7 @@ One folder per concern, no deeper nesting until a folder gets crowded.
 | Path | Screen | Top-left button |
 |---|---|---|
 | `/` | Play | Two-line menu pill (opens drawer) |
+| `/freestyle` | Freestyle (read-only practice) | Back arrow (opens drawer); persistent Exit Freestyle → `/` |
 | `/topics` | Topics | Back arrow (opens drawer) |
 | `/cards?topic=<id>` | Cards (no `topic` = All) | Back arrow (opens drawer) |
 | `/settings` | Settings | Back arrow (opens drawer) |
@@ -74,6 +75,7 @@ Signed-out users get Clerk's `<SignIn />`; when a session expires Clerk sends th
 | Screen | Reads | Writes |
 |---|---|---|
 | Play | `GET /cards/due?limit=20` | `POST /cards/{id}/review` `{quality}` |
+| Freestyle | `GET /cards?limit=50&after=` (all topics), `GET /topics` for labels | None |
 | Topics | `GET /topics` | `POST /topics`, `PATCH /topics/{id}`, `DELETE /topics/{id}` |
 | Cards | `GET /cards?limit=50&after=&q=&topicId=` (infinite) | `POST /cards` (one card per batch), `PATCH /cards/{id}`, `DELETE /cards/{id}` |
 | Agent access | `GET /api-keys` | `POST /api-keys`, `DELETE /api-keys/{id}` |
@@ -108,7 +110,7 @@ Rebuild these cleanly; the prototype is reference only.
 | `Segmented` | Theme picker; same look as the grade bar. |
 | `Loading` | 37-message master list, random per load, 300ms delay. Variants: full (Play) and list. |
 | `ErrorState` / `SaveError` | One headline "Brain.exe stopped working" + plain line + Try again. Banner for failed saves. |
-| `Drawer` | Wordmark (taps to Play), Topics / Cards / Settings at the bottom, current item shaded. |
+| `Drawer` | Wordmark (taps to Play), Freestyle / Topics / Cards / Settings at the bottom, current item shaded. |
 
 ---
 
@@ -140,7 +142,8 @@ Each phase ends with the screen matching its screenshots in light and dark.
    - Clerk dashboard (production instance): add the domain.
 8. **Tests:**
    - Vitest: `nextInterval`, due label, untilLabel, queue prefetch/dedupe.
-   - Playwright (one flow): sign in with a Clerk test user → grade a card → add a topic → add a card → edit it → delete it.
+   - Planned manual authenticated smoke: sign in → grade a card → add a topic → add a card → edit it → delete it. Freestyle browser coverage is installed: `npm run test:browser` (first run: `npx playwright install chromium`); see `docs/freestyle-verification.md`.
+9. **Freestyle:** implementation specification and verification checklist: [`docs/freestyle-implementation-plan.md`](docs/freestyle-implementation-plan.md). Local paginated, page-shuffled, unscheduled practice; no persistence or writes. Scheduled-review submission ownership lives above routes, with durable-in-memory recovery and confirmed-save completion gating. Explicit POST retries remain potentially ambiguous (no API idempotency key).
 
 ---
 

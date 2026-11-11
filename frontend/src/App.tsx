@@ -5,14 +5,17 @@ import { ApiError } from './api'
 import ErrorState from './components/ErrorState'
 import Loading from './components/Loading'
 import { SaveErrorBanner } from './components/SaveError'
+import { ReviewWritesNotice, ReviewWritesProvider } from './components/ReviewWrites'
 import { BACK, Icon } from './components/ui'
 import AgentAccess from './screens/AgentAccess'
 import Cards from './screens/Cards'
+import Freestyle from './screens/Freestyle'
 import Play from './screens/Play'
 import Settings from './screens/Settings'
 import Topics from './screens/Topics'
 
 const MENU = [
+  { label: 'Freestyle', path: '/freestyle', icon: <><path d="m17 3 4 4-4 4M3 17l4 0L17 7h4M3 7h4l3 3m4 4 3 3h4m-4-4 4 4-4 4" /></> },
   { label: 'Topics', path: '/topics', icon: <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /> },
   { label: 'Cards', path: '/cards', icon: <><rect x="3" y="7" width="14" height="14" rx="2" /><path d="M7 3h12a2 2 0 0 1 2 2v12" /></> },
   {
@@ -40,7 +43,7 @@ export default function App() {
   if (!isSignedIn) {
     return <div className="signin"><SignIn routing="hash" /></div>
   }
-  return <Shell />
+  return <ReviewWritesProvider><Shell /></ReviewWritesProvider>
 }
 
 function Shell() {
@@ -71,6 +74,7 @@ function Shell() {
 
       <Routes>
         <Route path="/" element={<Play menuOpen={menuOpen} />} />
+        <Route path="/freestyle" element={<Freestyle menuOpen={menuOpen} />} />
         <Route path="/topics" element={<Topics />} />
         <Route path="/cards" element={<Cards />} />
         <Route path="/settings" element={<Settings />} />
@@ -78,6 +82,7 @@ function Shell() {
         <Route path="*" element={<Play menuOpen={menuOpen} />} />
       </Routes>
 
+      <ReviewWritesNotice />
       <SaveErrorBanner />
 
       <div className={`scrim ${menuOpen ? 'show' : ''}`} onClick={() => setMenuOpen(false)} />

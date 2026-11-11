@@ -23,6 +23,24 @@ The backend already supports the move: `POST /api/topics/{id}/move-cards` with `
 
 Design it in the prototype first, the same way as the other screens.
 
+## Freestyle follow-ups
+
+Feature draft: `docs/freestyle-feature.md`. These are deferred improvements, not launch requirements.
+
+### Collection-wide shuffle
+
+Launch shuffles each fetched page on the frontend while retaining the existing newest-first cursor pagination. This varies order within a page but does **not** remove recency bias across pages: short sessions still favor newer cards.
+
+Revisit a genuinely randomized traversal across the entire collection, with pagination that avoids duplicates and omissions. Evaluate a stable seed/cursor strategy or a session/deck approach; backend session state is not assumed to be necessary. Do not simply randomize every request independently, which could repeat or miss cards. Saved user progress/resume is not required.
+
+### Non-swipe advancement / accessibility
+
+The initial Freestyle UI intentionally has no visible **Next card** button. Revisit a non-swipe advancement alternative (for example, a button or keyboard/assistive-technology action) if needed. Review input accessibility explicitly: deferring this means advancement is not guaranteed for users who cannot swipe. Keep any future UI addition consistent with the clean card layout.
+
+### Learning-expectation copy, if needed
+
+No user-facing mastery/memory disclaimer is required at launch. If confusion arises later, consider concise wording explaining that Freestyle is ungraded practice and does not update the review schedule. Do not suggest it has no memory benefit; extra practice can help recall. Avoid mastery claims, but do not add warning copy merely for its own sake.
+
 ## Other deferred items
 These come from `BACKEND_PLAN.md` → "Deliberately skipped".
 - New-cards-per-day limit (needed if agent-pushed cards flood the landing queue)

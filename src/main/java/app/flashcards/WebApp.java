@@ -15,7 +15,7 @@ import java.time.Duration;
 class WebApp implements WebMvcConfigurer {
 
     // Client-side routes (frontend App.tsx): a reload or deep link gets the app, which then routes itself
-    @GetMapping({"/topics", "/cards", "/settings", "/settings/agents"})
+    @GetMapping({"/freestyle", "/topics", "/cards", "/settings", "/settings/agents"})
     String app() {
         return "forward:/index.html";
     }

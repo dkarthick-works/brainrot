@@ -14,16 +14,18 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
+async function request<T>(path: string, method = 'GET', body?: unknown, signal?: AbortSignal): Promise<T> {
   const token = await getToken()
   let res: Response
   try {
     res = await fetch(BASE + path, {
       method,
+      signal,
       headers: { Authorization: `Bearer ${token}`, ...(body !== undefined && { 'Content-Type': 'application/json' }) },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
-  } catch {
+  } catch (error) {
+    if (signal?.aborted || (error instanceof Error && error.name === 'AbortError')) throw error
     throw new ApiError(0, 'network error')
   }
   if (!res.ok) {
@@ -42,8 +44,8 @@ const qs = (params: Record<string, string | number | null | undefined>) => {
 export const api = {
   due: (limit = 20) => request<Due>(`/cards/due${qs({ limit })}`),
   review: (id: string, quality: number) => request<Card>(`/cards/${id}/review`, 'POST', { quality }),
-  cards: (p: { topicId: string | null; q: string; after?: string | null }) =>
-    request<Page>(`/cards${qs({ limit: 50, topicId: p.topicId, q: p.q, after: p.after })}`),
+  cards: (p: { topicId: string | null; q: string; after?: string | null }, signal?: AbortSignal) =>
+    request<Page>(`/cards${qs({ limit: 50, topicId: p.topicId, q: p.q, after: p.after })}`, 'GET', undefined, signal),
   createCard: (topicId: string | null, question: string, answer: string) =>
     request<CreateResult>('/cards', 'POST', { topicId, cards: [{ question, answer }] }),
   updateCard: (id: string, patch: Pick<Card, 'question' | 'answer' | 'topicId'>) => request<Card>(`/cards/${id}`, 'PATCH', patch),

@@ -28,15 +28,27 @@ The prototype is for settling the design only. It has no code-level impact on th
 - The remaining count sits just below the card stack as position out of total ("1 / 5"), in small muted text. Chosen for being subtle and for tying the number to the stack it counts. The top of the screen holds only the menu button.
 - **Implementation note:** the flipping card needs its own compositing layer (`will-change: transform` on the element that rotates). Without it, Chrome stops drawing the lower half of the flipped card after a repaint, and the card behind shows through.
 - A rounded pill-shaped menu button with two lines sits top-left. Everything else in the app goes inside the menu (drawer).
-- The drawer has exactly three items, each with an icon: **Topics**, **Cards**, **Settings**. No sign-out entry in the drawer. The items sit at the bottom of the drawer so they're within thumb reach on a phone.
+- The drawer has four items, each with a distinct icon, in order: **Freestyle** (shuffle), **Topics**, **Cards**, **Settings** (Freestyle addition approved during implementation planning). No sign-out entry in the drawer. The items sit at the bottom of the drawer so they're within thumb reach on a phone.
 
 ## Play Screen empty states — 🔒 locked 2026-11-05
 Both are centered on the Play Screen, with the headline in the wordmark font (Space Grotesk 700, 32px). No celebration effects. The difficulty bar is hidden.
 - **Finished today's cards — "Brain Upgraded"** (exact text). Below it, in muted text: "Next card due in 3h." (from the soonest future `dueAt`: "in 40m", "in 3h", "tomorrow", "in 5 days"; "Nothing else is scheduled." if none). If cards were reviewed this session, a summary in normal text: "6 reviewed · 5 Good or Easy".
+  - A primary **Freestyle** action follows the existing summary/next-due copy, only after scheduled-review saves are confirmed. Pending saves show loading; unresolved save failures retain recovery rather than premature completion.
   - The session summary is counted on the device during the session; the backend keeps no review history yet.
   - "Review ahead" (studying tomorrow's cards early) was considered and dropped: the backend only returns cards that are already due.
 - **Brand-new user, no cards at all — "Let's put those brain cells to work."** (exact text). Below: "Add your first cards, or connect an agent to make them for you." Two full-width buttons: **Add cards** (teal, opens Cards) and **Connect an agent** (outlined, opens Agent access).
 - Prototype only: open the app with `?fresh` in the URL to see the brand-new state; "Replay mock deck" on the done state isn't part of the design.
+
+## Freestyle — approved implementation addition
+- `/` remains scheduled review. `/freestyle` is a separate read-only mode, available anytime from the drawer, regardless of due cards. It never changes the scheduled queue, schedule, or statistics.
+- All cards load incrementally; each accepted page is shuffled once locally. Question first, tap to flip, swipe either direction to advance even before revealing. No grades, interval hints, visible Next button, or global arrow-key advancement.
+- No saved progress, resume, topic selection, or deck caching. Exit/reload/navigation discards the pass; drawer open/close preserves it and suspends card input. Selecting the current drawer entry closes the drawer without restarting.
+- Header: existing drawer affordance at left, centered **Freestyle**, outlined **Exit Freestyle** at right, explicitly navigating Home. Use two rows on narrow screens. Header remains outside every state; drawer/scrim can cover it.
+- Stack uses existing card faces, up to 640px wide / 800px high, long-content scrolling, and safe-area room for **Card N** below; no guessed total or grade footer. Topic labels are optional if their lookup is unavailable.
+- Initial/buffer-empty loading uses the delayed full loader; blocking failures use existing offline/server wording and **Try again**. Later-page errors with cards remaining show a compact read notice; the cards stay usable and retry preserves progress/order.
+- Empty: **No cards yet**, **Add cards**, **Back to home**. Completion after one nonempty pass: **Freestyle complete**, primary **Play again**, secondary **Back to home**. Replay refetches a fresh pass.
+- Both themes use existing tokens. Reduced motion removes large fly-out/3D transitions. Only the top card's visible face is announced; local Enter/Space can flip. Non-gesture advancement remains deferred in `BACKLOG.md`; this is not full keyboard accessibility.
+- Scheduled-review writes live above routes and continue on navigation; unresolved failures remain actionable in memory. No reload/offline durability or exactly-once POST delivery is promised.
 
 ## Loading states — 🔒 locked 2026-11-05
 - **Messages:** every load shows one message picked at random from a master list of 37 (in `src/Loading.tsx`): "Warming up the neurons...", plus four sets supplied by the user: brain ("Brain cells assembling..."), internet ("Let him cook...", "Chat, are we cooked?"), developer ("SELECT * FROM brain..."), and calm ("A thought is forming..."). A new pick on every load; it doesn't change while that load is running.

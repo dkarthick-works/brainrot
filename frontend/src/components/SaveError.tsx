@@ -4,18 +4,27 @@ import type { ApiError } from '../api'
 import { CLOSE, Icon } from './ui'
 
 // One app-wide "Couldn't save" banner. Holds the retry for the last failed save.
-let retry: (() => void) | null = null
+type SaveNotice = { retry: () => void; kind: 'generic' | 'review' }
+let notice: SaveNotice | null = null
 const listeners = new Set<() => void>()
-function setRetry(r: (() => void) | null) {
-  retry = r
+function setRetry(r: (() => void) | null, kind: SaveNotice['kind'] = 'generic') {
+  notice = r ? { retry: r, kind } : null
   listeners.forEach(l => l())
+}
+function useSaveNotice() {
+  return useSyncExternalStore(
+    l => (listeners.add(l), () => void listeners.delete(l)),
+    () => notice,
+  )
+}
+export const useReviewSaveBannerVisible = () => useSaveNotice()?.kind === 'review'
+export function clearReviewSaveError() {
+  if (notice?.kind === 'review') setRetry(null)
 }
 
 export function SaveErrorBanner() {
-  const r = useSyncExternalStore(
-    l => (listeners.add(l), () => void listeners.delete(l)),
-    () => retry,
-  )
+  const current = useSaveNotice()
+  const r = current?.retry
   // Clears itself after 8s
   useEffect(() => {
     if (!r) return
@@ -25,7 +34,7 @@ export function SaveErrorBanner() {
   if (!r) return null
   return (
     <div className="save-error" role="alert">
-      <span>Couldn't save. Your change was undone.</span>
+      <span>{current?.kind === 'review' ? "A scheduled review couldn't be saved." : "Couldn't save. Your change was undone."}</span>
       <button onClick={() => { setRetry(null); r() }}>Try again</button>
       <button className="dismiss" aria-label="Dismiss" onClick={() => setRetry(null)}>
         <Icon>{CLOSE}</Icon>
@@ -67,4 +76,4 @@ export function useSave<V, R = unknown>(o: SaveOptions<V, R>) {
 }
 
 /** Shows the banner for a failure handled outside useSave (Play reviews). */
-export const showSaveError = (r: () => void) => setRetry(r)
+export const showSaveError = (r: () => void, kind: SaveNotice['kind'] = 'generic') => setRetry(r, kind)

@@ -12,6 +12,7 @@ import { applyTheme, loadTheme } from './theme'
 import './styles/tokens.css'
 import './styles/app.css'
 import './styles/play.css'
+import './styles/freestyle.css'
 import './styles/cards.css'
 import './styles/settings.css'
 
