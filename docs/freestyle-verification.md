@@ -1,6 +1,20 @@
 # Freestyle implementation verification
 
+## Incremental documentation review
+
+Frozen source: `8c2a9bf3ce5e2c609cafb8dbef920f5ef3026131`; reviewed range: `5bd432a569b429f086b7a94ffbdcd9821a90e3f4..8c2a9bf3ce5e2c609cafb8dbef920f5ef3026131` (six commits, including the earlier documentation PR and its merge).
+
+- `npm --prefix frontend ci --ignore-scripts --no-audit --no-fund`: exit 0; no dependency/lockfile edits.
+- `npm --prefix frontend test`: exit 0; **71 tests in seven files**. The current suite includes the answer-only study-back regression added after the original implementation checks below.
+- `VITE_CLERK_PUBLISHABLE_KEY=pk_test_ZXhhbXBsZS5jbGVyay5hY2NvdW50cy5kZXYk npm --prefix frontend run build`: exit 0; synthetic example key, not live authentication evidence.
+- `npm --prefix frontend run test:browser`: exit 0; nine Chromium cases using stubbed API and a test-only Clerk adapter.
+- `env -u MONGODB_URI -u CLERK_ISSUER -u MCP_RESOURCE_URL -u ALLOWED_ORIGINS ./mvnw -B test`: exit 0; 14 tests, zero failures/errors/skips. MongoDB was disposable Testcontainers state; OAuth signing/JWKS fixtures were local. Java 25.0.5, Maven 3.10.0, Node 26.7.0 and npm 11.19.0 were used.
+
+The focused MVC test verifies forwarding for `/freestyle` and other explicit client routes on GET/refresh. The packaged-jar checks recorded below were **not rerun** in this incremental review. No container image build, deployment, real Clerk login, physical-device touch, Safari/WebKit or installed-PWA verification is claimed. Review-write recovery remains memory-only and explicit retries are not exactly-once delivery. See [implemented data/session semantics](data-model.md#frontend-state-and-network-limits) and [test setup](development.md#chromium-browser-tests).
+
 ## Results
+
+The following records the earlier implementation pass, not additional executions by the incremental documentation review.
 
 - `cd frontend && npm test`: 70 tests passed across 7 files.
 - `cd frontend && npm run build`: TypeScript and production Vite/PWA build passed.

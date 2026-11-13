@@ -69,12 +69,27 @@ VITE_CLERK_PUBLISHABLE_KEY=YOUR_PUBLIC_CLERK_KEY npm --prefix frontend run build
 - [Sm2Test.java](../src/test/java/app/flashcards/Sm2Test.java): four pure scheduling tests, no database.
 - [CardFlowTest.java](../src/test/java/app/flashcards/CardFlowTest.java): four integration tests for isolation, duplicates, pagination, topics, API keys and MCP.
 - [OAuthMcpTest.java](../src/test/java/app/flashcards/OAuthMcpTest.java): five integration tests, including signed-token decoding, metadata/challenges and MCP-only OAuth restrictions. Serves its own local JWKS rather than calling Clerk.
+- [WebAppTest.java](../src/test/java/app/flashcards/WebAppTest.java): one database-free standalone MockMvc test checking direct requests and cache-bypassing refreshes forward `/freestyle` and other explicit SPA routes to `/index.html`. It does not load packaged assets or prove deployed security behavior.
 - [TestcontainersConfiguration.java](../src/test/java/app/flashcards/TestcontainersConfiguration.java) supplies disposable `mongo:8` service connections for integration tests. Docker access/image pulls are required; no Compose database is required. Avoid production environment overrides.
-- [logic.test.ts](../frontend/src/logic.test.ts): nine frontend tests including scheduler hints and queue helpers. `npm run build` runs TypeScript and Vite/PWA generation; it is not a browser interaction test.
+- Frontend Vitest: seven files cover scheduler hints/queue helpers, Freestyle pure transitions, hook lifecycle, stack gestures, screen states, and scheduled-review submission/navigation recovery. See [logic.test.ts](../frontend/src/logic.test.ts), [freestyle.test.ts](../frontend/src/freestyle.test.ts), [useFreestyleSession.test.tsx](../frontend/src/hooks/useFreestyleSession.test.tsx), [FreestyleStack.test.tsx](../frontend/src/components/FreestyleStack.test.tsx), [Freestyle.test.tsx](../frontend/src/screens/Freestyle.test.tsx), [ReviewWrites.test.tsx](../frontend/src/components/ReviewWrites.test.tsx) and [Play.test.tsx](../frontend/src/screens/Play.test.tsx). [vitest.config.ts](../frontend/vitest.config.ts) uses jsdom and limits discovery to `src/**/*.test.{ts,tsx}`. `npm run build` runs TypeScript and Vite/PWA generation; it is not a browser interaction test.
 
 For a database-free backend subset: `./mvnw -B -Dtest=Sm2Test test`.
 
+### Chromium browser tests
+
+From the repository root, after installing frontend dependencies:
+
+```sh
+cd frontend
+npx playwright install chromium
+npm run test:browser
+```
+
+The locked Playwright package supplies the CLI. Browser installation requires network access on first use; hosts missing browser system libraries also need OS dependencies installed by an authorized administrator. [playwright.config.ts](../frontend/playwright.config.ts) starts its own loopback Vite server on port 8091 with `reuseExistingServer: false`, so keep that port free. [e2e/vite.config.ts](../frontend/e2e/vite.config.ts) uses a separate test-only entry and Clerk adapter; [freestyle.spec.ts](../frontend/e2e/freestyle.spec.ts) intercepts API requests. These nine Chromium cases check both themes/four viewports, long-text scrolling, navigation, replay, a 102-card paginated failure/retry pass and no Freestyle writes. They do not verify production authentication, a packaged Spring server or physical touch/Safari behavior. See [verification boundaries](freestyle-verification.md).
+
 Audit execution at source `5bd432a569b429f086b7a94ffbdcd9821a90e3f4`: all 13 Maven tests passed with no skips, all nine frontend tests passed, and the frontend production build passed. Install used `npm ci --ignore-scripts --no-audit --no-fund`; no dependency/lockfile edits were needed. Warnings included deprecated `glob`, Lombok/Unsafe, Mockito dynamic agent attachment and Spring MCP bean/provider warnings; none failed these checks. No production calls, real credentials, existing database or live Clerk login were used.
+
+Incremental execution at source `8c2a9bf3ce5e2c609cafb8dbef920f5ef3026131`: `npm --prefix frontend ci --ignore-scripts --no-audit --no-fund`, `npm --prefix frontend test` (71 tests/seven files), `npm --prefix frontend run test:browser` (nine Chromium cases), and `env -u MONGODB_URI -u CLERK_ISSUER -u MCP_RESOURCE_URL -u ALLOWED_ORIGINS ./mvnw -B test` (14 tests, zero failures/errors/skips) all exited 0. The frontend production build also exited 0 with a synthetic example publishable-key value; this proves compilation/PWA generation, not live Clerk configuration. Toolchain versions match those listed above. Testcontainers supplied disposable MongoDB and OAuth used local signing/JWKS fixtures. The Chromium binary was already available; browser/OS installation commands were not rerun. No application/dependency changes, packaged jar launch, image build, production requests, existing database access or live login were part of this incremental pass.
 
 ## Container packaging and health
 
