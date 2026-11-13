@@ -6,6 +6,7 @@ Flashcards with spaced repetition: a React PWA, a Spring Boot REST API and seven
 - [Architecture and data flow](docs/architecture.md) ([canonical Mermaid](docs/architecture.mmd))
 - [REST, MCP and authentication contracts](docs/api.md)
 - [Data model and scheduling](docs/data-model.md)
+- [Freestyle practice and review-save recovery](docs/freestyle-feature.md) ([verification and browser tests](docs/freestyle-verification.md))
 
 ## Quick start
 
@@ -44,4 +45,4 @@ Open `http://localhost:8089` and sign in with Clerk. The example publishable key
 
 ## Validation boundary
 
-At source `5bd432a569b429f086b7a94ffbdcd9821a90e3f4`, Maven tests passed (13), frontend unit tests passed (9), and the frontend production build passed. Integration tests used disposable Testcontainers MongoDB, and OAuth tests used local signing keys/JWKS. This does not verify a live Clerk login, deployed service, container image build or browser end-to-end flow. The PWA caches an app shell, **not offline card data or writes**.
+The incremental review of `5bd432a569b429f086b7a94ffbdcd9821a90e3f4..8c2a9bf3ce5e2c609cafb8dbef920f5ef3026131` verified Freestyle practice, navigation-safe scheduled-review saves and the updated card layouts. At the latter source, Maven tests passed (14), frontend unit/component tests passed (71), Chromium browser tests passed (9), and the frontend production build passed. Integration tests used disposable Testcontainers MongoDB; OAuth tests used local signing keys/JWKS; browser tests used a test-only Clerk adapter and stubbed API. This does not verify a live Clerk login, deployed service, container image build, physical touch input or installed PWA. The PWA caches an app shell, **not offline card data or writes**. Review-save recovery survives route changes only in memory, not reload or sign-out.
