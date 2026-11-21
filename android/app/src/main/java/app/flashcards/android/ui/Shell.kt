@@ -64,6 +64,7 @@ import app.flashcards.android.ui.components.BrainrotIcons
 import app.flashcards.android.ui.components.ReviewWritesNotice
 import app.flashcards.android.ui.components.plainClick
 import app.flashcards.android.ui.screens.AgentAccessPlaceholder
+import app.flashcards.android.ui.screens.FreestyleScreen
 import app.flashcards.android.ui.screens.PlayScreen
 import app.flashcards.android.ui.screens.ScreenPlaceholder
 import app.flashcards.android.ui.screens.SettingsPlaceholder
@@ -155,7 +156,14 @@ fun Shell(container: AppContainer) {
                         onFreestyle = { go(Route.Freestyle) },
                     )
                 }
-                composable<Route.Freestyle> { ScreenPlaceholder("Freestyle", "Arrives in phase 3") }
+                composable<Route.Freestyle> {
+                    FreestyleScreen(
+                        container = container,
+                        suspended = menuOpen,
+                        onExit = { go(Route.Play) },
+                        onAddCards = { go(Route.Cards()) },
+                    )
+                }
                 composable<Route.Topics> { ScreenPlaceholder("Topics", "Arrives in phase 4") }
                 composable<Route.Cards> { backStackEntry ->
                     backStackEntry.toRoute<Route.Cards>()

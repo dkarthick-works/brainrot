@@ -62,6 +62,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -150,7 +151,7 @@ fun PlayScreen(container: AppContainer, onAddCards: () -> Unit, onConnectAgent: 
     }
 }
 
-private fun errorLine(error: ApiError?) = if (error?.status == 0) {
+internal fun errorLine(error: ApiError?) = if (error?.status == 0) {
     "Couldn't reach brainrot. Check your connection."
 } else {
     "Something broke on our end. Try again in a moment."
@@ -168,7 +169,7 @@ private fun Stage(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun DoneColumn(title: String, content: @Composable () -> Unit) {
+internal fun DoneColumn(title: String, content: @Composable () -> Unit) {
     Column(
         Modifier.widthIn(max = 320.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -195,7 +196,7 @@ private fun DoneColumn(title: String, content: @Composable () -> Unit) {
 private fun DoneLine(text: String) = BText(text, color = Brainrot.colors.muted, size = 15.sp, align = TextAlign.Center)
 
 @Composable
-private fun DoneButton(label: String, primary: Boolean, onClick: () -> Unit) {
+internal fun DoneButton(label: String, primary: Boolean, onClick: () -> Unit) {
     val c = Brainrot.colors
     val shape = RoundedCornerShape(14.dp)
     Box(
@@ -352,7 +353,14 @@ private fun Study(view: PlayView.Study, topicNames: Map<String, String>, onGrade
 }
 
 @Composable
-private fun FlipCard(card: Card, topic: String, backHint: String, rotation: () -> Float) {
+internal fun FlipCard(
+    card: Card,
+    topic: String,
+    backHint: String,
+    rotation: () -> Float,
+    frontHint: String = "Tap to reveal",
+    compact: Boolean = false,
+) {
     // A peeking card becomes the top card without leaving composition, so always read the latest lambda
     val latestRotation by rememberUpdatedState(rotation)
     val showBack by remember { derivedStateOf { latestRotation() > 90f } }
@@ -365,15 +373,15 @@ private fun FlipCard(card: Card, topic: String, backHint: String, rotation: () -
             },
     ) {
         if (showBack) {
-            CardFace(card.answer, topic, backHint, Modifier.graphicsLayer { rotationY = 180f })
+            CardFace(card.answer, topic, backHint, compact, Modifier.graphicsLayer { rotationY = 180f })
         } else {
-            CardFace(card.question, topic, "Tap to reveal")
+            CardFace(card.question, topic, frontHint, compact)
         }
     }
 }
 
 @Composable
-private fun CardFace(text: String, topic: String, hint: String, modifier: Modifier = Modifier) {
+private fun CardFace(text: String, topic: String, hint: String, compact: Boolean, modifier: Modifier = Modifier) {
     val c = Brainrot.colors
     val shape = RoundedCornerShape(24.dp)
     Column(
@@ -389,6 +397,8 @@ private fun CardFace(text: String, topic: String, hint: String, modifier: Modifi
         BasicText(
             topic.uppercase(),
             style = TextStyle(color = c.muted, fontFamily = Inter, fontSize = 12.sp, letterSpacing = 0.08.em),
+            overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip,
+            maxLines = if (compact) 1 else Int.MAX_VALUE,
         )
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             val minHeight = maxHeight
@@ -408,7 +418,7 @@ private fun CardFace(text: String, topic: String, hint: String, modifier: Modifi
                 )
             }
         }
-        BText(hint, color = c.muted, size = 13.sp)
+        BText(hint, color = c.muted, size = if (compact) 12.sp else 13.sp)
     }
 }
 
