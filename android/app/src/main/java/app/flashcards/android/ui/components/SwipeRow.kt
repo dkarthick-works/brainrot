@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import app.flashcards.android.ui.theme.Brainrot
@@ -53,6 +54,8 @@ fun SwipeRow(
     onOpenChange: (Boolean) -> Unit,
     onTap: () -> Unit,
     editing: Boolean = false,
+    verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
+    verticalPadding: Dp = 8.dp,
     content: @Composable RowScope.() -> Unit,
 ) {
     val c = Brainrot.colors
@@ -144,9 +147,9 @@ fun SwipeRow(
                     }
                 }
                 .plainClick(onClick = onTap)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = verticalPadding),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = verticalAlignment,
             content = content,
         )
     }

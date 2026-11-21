@@ -65,9 +65,9 @@ import app.flashcards.android.ui.components.ReviewWritesNotice
 import app.flashcards.android.ui.components.SaveErrorBanner
 import app.flashcards.android.ui.components.plainClick
 import app.flashcards.android.ui.screens.AgentAccessPlaceholder
+import app.flashcards.android.ui.screens.CardsScreen
 import app.flashcards.android.ui.screens.FreestyleScreen
 import app.flashcards.android.ui.screens.PlayScreen
-import app.flashcards.android.ui.screens.ScreenPlaceholder
 import app.flashcards.android.ui.screens.SettingsPlaceholder
 import app.flashcards.android.ui.screens.TopicsScreen
 import app.flashcards.android.ui.theme.Brainrot
@@ -177,8 +177,11 @@ fun Shell(container: AppContainer) {
                         )
                     }
                     composable<Route.Cards> { backStackEntry ->
-                        backStackEntry.toRoute<Route.Cards>()
-                        ScreenPlaceholder("Cards", "Arrives in phase 5")
+                        CardsScreen(
+                            container = container,
+                            initialTopicId = backStackEntry.toRoute<Route.Cards>().topicId,
+                            drawerOpen = menuOpen,
+                        )
                     }
                     composable<Route.Settings> {
                         SettingsPlaceholder(container.themeStore) { nav.navigate(Route.AgentAccess) { launchSingleTop = true } }

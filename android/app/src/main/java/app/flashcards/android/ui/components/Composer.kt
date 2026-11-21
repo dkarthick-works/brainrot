@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,16 +40,51 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.flashcards.android.ui.theme.Brainrot
 import app.flashcards.android.ui.theme.Inter
 import app.flashcards.android.ui.theme.cardShadow
+
+/** The line above the bar: "Renaming X ✕", "Answer for X ✕". */
+@Composable
+fun ComposerContext(prefix: String, strong: String, closeLabel: String, onClose: () -> Unit) {
+    val c = Brainrot.colors
+    Row(
+        Modifier.padding(start = 16.dp, bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BasicText(
+            buildAnnotatedString {
+                append(prefix)
+                withStyle(SpanStyle(color = c.ink, fontWeight = FontWeight.SemiBold)) { append(strong) }
+            },
+            Modifier.weight(1f, fill = false),
+            style = TextStyle(color = c.muted, fontFamily = Inter, fontSize = 13.sp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Box(
+            Modifier
+                .semantics { contentDescription = closeLabel }
+                .plainClick(onClick = onClose)
+                .padding(4.dp),
+        ) {
+            BrainrotIcon(BrainrotIcons.Close, c.muted, size = 14.dp)
+        }
+    }
+}
 
 /** Chat-style bar pinned to the bottom of list screens, for adding and renaming. */
 @Composable
@@ -62,6 +98,7 @@ fun Composer(
     sendLabel: String,
     maxLength: Int,
     focusRequester: FocusRequester,
+    imeAction: ImeAction = ImeAction.Send,
     error: String? = null,
     context: (@Composable () -> Unit)? = null,
 ) {
@@ -118,8 +155,8 @@ fun Composer(
                 singleLine = true,
                 cursorBrush = SolidColor(c.good),
                 interactionSource = interaction,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { submit() }),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = imeAction),
+                keyboardActions = KeyboardActions(onSend = { submit() }, onNext = { submit() }),
                 decorationBox = { inner ->
                     Box {
                         if (value.isEmpty()) BText(placeholder, color = c.muted)

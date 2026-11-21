@@ -50,6 +50,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -91,7 +92,7 @@ fun Modifier.groupedRow(first: Boolean, last: Boolean): Modifier {
 
 /** Nothing for 300ms, then a muted message and five pulsing placeholder rows. */
 @Composable
-fun ListLoading() {
+fun ListLoading(horizontalPadding: Dp = 16.dp) {
     val message = remember { LoadingMessages.random() }
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -112,7 +113,7 @@ fun ListLoading() {
             label = "pulse",
         )
     }
-    Column(Modifier.widthIn(max = ListWidth).fillMaxWidth().padding(horizontal = 16.dp)) {
+    Column(Modifier.widthIn(max = ListWidth).fillMaxWidth().padding(horizontal = horizontalPadding)) {
         BText(
             message,
             Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 12.dp),
@@ -144,10 +145,10 @@ fun ListLoading() {
 
 /** A list couldn't load. Sits in the list's place, so the top bar and composer stay usable. */
 @Composable
-fun ListError(detail: String, onRetry: () -> Unit) {
+fun ListError(detail: String, onRetry: () -> Unit, horizontalPadding: Dp = 16.dp) {
     val c = Brainrot.colors
     val shape = RoundedCornerShape(ListRadius)
-    Box(Modifier.widthIn(max = ListWidth).fillMaxWidth().padding(16.dp)) {
+    Box(Modifier.widthIn(max = ListWidth).fillMaxWidth().padding(horizontal = horizontalPadding, vertical = 16.dp)) {
         Column(
             Modifier
                 .fillMaxWidth()

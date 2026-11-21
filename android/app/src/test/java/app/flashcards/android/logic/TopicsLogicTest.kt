@@ -33,6 +33,18 @@ class TopicsLogicTest {
         assertTrue(isDuplicateName(list, "sql", "a"))
     }
 
+    @Test fun dueLabelMatchesWeb() {
+        val now = java.time.Instant.parse("2026-11-05T00:00:00Z")
+        assertEquals("due now", dueLabel(now.minusSeconds(600).toString(), now))
+        assertEquals("in 1d", dueLabel(now.plusSeconds(60).toString(), now))
+        assertEquals("in 3d", dueLabel(now.plusSeconds(3 * 86_400).toString(), now))
+        assertEquals("in 2mo", dueLabel(now.plusSeconds(60 * 86_400).toString(), now))
+    }
+
+    @Test fun questionKeyMatchesBackendRule() {
+        assertEquals("what is atp?", questionKey("  What   is\nATP? "))
+    }
+
     @Test fun sendRules() {
         val biology = topic("a", "Biology")
         val list = listOf(biology, topic("b", "SQL"))

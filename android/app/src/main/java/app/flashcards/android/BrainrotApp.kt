@@ -4,9 +4,13 @@ import android.app.Application
 import app.flashcards.android.api.ApiClient
 import app.flashcards.android.api.BrainrotApi
 import app.flashcards.android.data.ThemeStore
+import app.flashcards.android.api.CardInput
+import app.flashcards.android.api.CreateCardsRequest
 import app.flashcards.android.api.NameRequest
 import app.flashcards.android.api.ReviewRequest
+import app.flashcards.android.api.UpdateCardRequest
 import app.flashcards.android.api.apiCall
+import app.flashcards.android.data.CardStore
 import app.flashcards.android.data.ReviewWrites
 import app.flashcards.android.data.SaveNotice
 import app.flashcards.android.data.TopicStore
@@ -45,6 +49,20 @@ class AppContainer(app: Application) {
         patchTopic = { id, name -> apiCall { api.renameTopic(id, NameRequest(name)) } },
         deleteTopic = { id -> apiCall { api.deleteTopic(id) } },
         notice = saveNotice,
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+    )
+
+    val cardStore = CardStore(
+        fetchPage = { topicId, q, after -> apiCall { api.cards(topicId, q.ifEmpty { null }, after) } },
+        postCard = { topicId, question, answer ->
+            apiCall { api.createCards(CreateCardsRequest(topicId, listOf(CardInput(question, answer)))) }
+        },
+        patchCard = { id, question, answer, topicId ->
+            apiCall { api.updateCard(id, UpdateCardRequest(question, answer, topicId)) }
+        },
+        removeCard = { id -> apiCall { api.deleteCard(id) } },
+        notice = saveNotice,
+        onSettled = topicStore::refresh, // card counts changed
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
     )
 }

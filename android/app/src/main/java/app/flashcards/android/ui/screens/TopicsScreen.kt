@@ -1,17 +1,14 @@
 package app.flashcards.android.ui.screens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,15 +23,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.flashcards.android.AppContainer
@@ -47,9 +36,9 @@ import app.flashcards.android.logic.isDuplicateName
 import app.flashcards.android.logic.plural
 import app.flashcards.android.logic.showsTopicSearch
 import app.flashcards.android.ui.components.BText
-import app.flashcards.android.ui.components.BrainrotIcon
 import app.flashcards.android.ui.components.BrainrotIcons
 import app.flashcards.android.ui.components.Composer
+import app.flashcards.android.ui.components.ComposerContext
 import app.flashcards.android.ui.components.ConfirmSheet
 import app.flashcards.android.ui.components.ListError
 import app.flashcards.android.ui.components.ListLoading
@@ -59,9 +48,7 @@ import app.flashcards.android.ui.components.SwipeAction
 import app.flashcards.android.ui.components.SwipeRow
 import app.flashcards.android.ui.components.TopBar
 import app.flashcards.android.ui.components.groupedRow
-import app.flashcards.android.ui.components.plainClick
 import app.flashcards.android.ui.theme.Brainrot
-import app.flashcards.android.ui.theme.Inter
 
 @Composable
 fun TopicsScreen(container: AppContainer, drawerOpen: Boolean, onOpenTopic: (String) -> Unit) {
@@ -183,7 +170,7 @@ fun TopicsScreen(container: AppContainer, drawerOpen: Boolean, onOpenTopic: (Str
             maxLength = TOPIC_NAME_MAX,
             focusRequester = input,
             error = if (duplicate) "\"$trimmed\" already exists" else null,
-            context = editing?.let { topic -> { RenamingLine(topic.name, ::resetComposer) } },
+            context = editing?.let { topic -> { ComposerContext("Renaming ", topic.name, "Cancel rename", ::resetComposer) } },
         )
     }
 
@@ -232,34 +219,5 @@ private fun TopicRow(
     SwipeRow(actions, open, onOpenChange, onTap, editing) {
         BText(topic.name, Modifier.weight(1f))
         BText(plural(topic.cardCount, "card"), color = Brainrot.colors.muted, size = 14.sp)
-    }
-}
-
-@Composable
-private fun RenamingLine(name: String, onCancel: () -> Unit) {
-    val c = Brainrot.colors
-    Row(
-        Modifier.padding(start = 16.dp, bottom = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        BasicText(
-            buildAnnotatedString {
-                append("Renaming ")
-                withStyle(SpanStyle(color = c.ink, fontWeight = FontWeight.SemiBold)) { append(name) }
-            },
-            Modifier.weight(1f, fill = false),
-            style = TextStyle(color = c.muted, fontFamily = Inter, fontSize = 13.sp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Box(
-            Modifier
-                .semantics { contentDescription = "Cancel rename" }
-                .plainClick(onClick = onCancel)
-                .padding(4.dp),
-        ) {
-            BrainrotIcon(BrainrotIcons.Close, c.muted, size = 14.dp)
-        }
     }
 }

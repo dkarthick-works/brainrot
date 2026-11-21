@@ -32,6 +32,7 @@ private fun strokeIcon(name: String, vararg paths: String): ImageVector =
 object BrainrotIcons {
     val Back = strokeIcon("back", "M19 12H5M12 19l-7-7 7-7")
     val ChevronRight = strokeIcon("chevron-right", "m9 6 6 6-6 6")
+    val ChevronDown = strokeIcon("chevron-down", "m6 9 6 6 6-6")
     val Search = strokeIcon("search", "M18 11a7 7 0 1 1-14 0a7 7 0 1 1 14 0z", "m20 20-4-4")
     val Pencil = strokeIcon("pencil", "M12 20h9", "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z")
     val Trash = strokeIcon("trash", "M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6")
