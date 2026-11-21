@@ -21,7 +21,7 @@ A native Android app in Kotlin with the same design as the web PWA (`frontend/`)
 | HTTP | OkHttp + Retrofit + kotlinx.serialization. An interceptor adds `Authorization: Bearer <Clerk token>` |
 | State | `ViewModel` + `StateFlow` per screen; small repositories own the cached topics/cards/keys (the web app's TanStack Query keys become repository flows) |
 | Navigation | Navigation Compose, type-safe routes |
-| Settings storage | DataStore Preferences (theme) |
+| Settings storage | SharedPreferences (theme; a synchronous read avoids a wrong-theme flash at launch) |
 | DI | Manual (one `AppContainer` in `Application`). No Hilt: the app is small |
 | Tests | JUnit + Turbine for logic and ViewModels; Compose UI tests for swipe/flip locks, run on a device |
 
@@ -64,7 +64,7 @@ The Gradle project lives in `android/` and builds on its own; nothing changes in
 ## 3. Design system port
 
 - **Tokens:** one `BrainrotColors` data class with a light and a dark instance, holding the exact values from `index.css` (`bg`, `ink`, `muted`, `card`, `line`, `again/hard/good/easy`, `onGrade`, the shadow). Provided through a `CompositionLocal`. No Material color roles.
-- **Theme:** System / Light / Dark from Settings, stored in DataStore. System follows `isSystemInDarkTheme()`. Status bar and navigation bar icons switch with it.
+- **Theme:** System / Light / Dark from Settings, stored in SharedPreferences. System follows `isSystemInDarkTheme()`. Status bar and navigation bar icons switch with it.
 - **Type:** Inter for everything, Space Grotesk 700 for the wordmark and headlines. Sizes match the prototype (wordmark 30, empty-state headline 32, loader 24, error 28 / 22).
 - **Shadows:** the CSS uses a two-layer warm shadow. Compose's `shadow()` is tinted grey, so use a custom `drawBehind` shadow to match the screenshots.
 - **Motion:** durations and easings come from `index.css`. If the system's animator scale is 0 (Android's "remove animations"), treat it as reduced motion: no fly-out/3D transitions, loaders stay still.
