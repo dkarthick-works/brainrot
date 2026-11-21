@@ -62,12 +62,14 @@ import app.flashcards.android.ui.components.BText
 import app.flashcards.android.ui.components.BrainrotIcon
 import app.flashcards.android.ui.components.BrainrotIcons
 import app.flashcards.android.ui.components.ReviewWritesNotice
+import app.flashcards.android.ui.components.SaveErrorBanner
 import app.flashcards.android.ui.components.plainClick
 import app.flashcards.android.ui.screens.AgentAccessPlaceholder
 import app.flashcards.android.ui.screens.FreestyleScreen
 import app.flashcards.android.ui.screens.PlayScreen
 import app.flashcards.android.ui.screens.ScreenPlaceholder
 import app.flashcards.android.ui.screens.SettingsPlaceholder
+import app.flashcards.android.ui.screens.TopicsScreen
 import app.flashcards.android.ui.theme.Brainrot
 import app.flashcards.android.ui.theme.SpaceGrotesk
 import app.flashcards.android.ui.theme.cardShadow
@@ -135,44 +137,61 @@ fun Shell(container: AppContainer) {
 
         Column(Modifier.fillMaxSize()) {
             // The notice takes the bottom inset while visible, so it never covers the grade bar
-            NavHost(
-                nav,
-                startDestination = Route.Play,
+            Box(
                 Modifier
                     .weight(1f)
                     .fillMaxWidth()
                     .then(if (hasFailedReviews) Modifier.consumeWindowInsets(bottomInset) else Modifier),
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
             ) {
-                composable<Route.Play> {
-                    PlayScreen(
-                        container = container,
-                        onAddCards = { go(Route.Cards()) },
-                        onConnectAgent = {
-                            go(Route.Settings)
-                            nav.navigate(Route.AgentAccess) { launchSingleTop = true }
-                        },
-                        onFreestyle = { go(Route.Freestyle) },
-                    )
+                NavHost(
+                    nav,
+                    startDestination = Route.Play,
+                    Modifier.fillMaxSize(),
+                    enterTransition = { EnterTransition.None },
+                    exitTransition = { ExitTransition.None },
+                ) {
+                    composable<Route.Play> {
+                        PlayScreen(
+                            container = container,
+                            onAddCards = { go(Route.Cards()) },
+                            onConnectAgent = {
+                                go(Route.Settings)
+                                nav.navigate(Route.AgentAccess) { launchSingleTop = true }
+                            },
+                            onFreestyle = { go(Route.Freestyle) },
+                        )
+                    }
+                    composable<Route.Freestyle> {
+                        FreestyleScreen(
+                            container = container,
+                            suspended = menuOpen,
+                            onExit = { go(Route.Play) },
+                            onAddCards = { go(Route.Cards()) },
+                        )
+                    }
+                    composable<Route.Topics> {
+                        TopicsScreen(
+                            container = container,
+                            drawerOpen = menuOpen,
+                            onOpenTopic = { id -> go(Route.Cards(id)) },
+                        )
+                    }
+                    composable<Route.Cards> { backStackEntry ->
+                        backStackEntry.toRoute<Route.Cards>()
+                        ScreenPlaceholder("Cards", "Arrives in phase 5")
+                    }
+                    composable<Route.Settings> {
+                        SettingsPlaceholder(container.themeStore) { nav.navigate(Route.AgentAccess) { launchSingleTop = true } }
+                    }
+                    composable<Route.AgentAccess> { AgentAccessPlaceholder() }
                 }
-                composable<Route.Freestyle> {
-                    FreestyleScreen(
-                        container = container,
-                        suspended = menuOpen,
-                        onExit = { go(Route.Play) },
-                        onAddCards = { go(Route.Cards()) },
-                    )
-                }
-                composable<Route.Topics> { ScreenPlaceholder("Topics", "Arrives in phase 4") }
-                composable<Route.Cards> { backStackEntry ->
-                    backStackEntry.toRoute<Route.Cards>()
-                    ScreenPlaceholder("Cards", "Arrives in phase 5")
-                }
-                composable<Route.Settings> {
-                    SettingsPlaceholder(container.themeStore) { nav.navigate(Route.AgentAccess) { launchSingleTop = true } }
-                }
-                composable<Route.AgentAccess> { AgentAccessPlaceholder() }
+                SaveErrorBanner(
+                    container.saveNotice,
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .windowInsetsPadding(bottomInset)
+                        .padding(bottom = 96.dp),
+                )
             }
             if (hasFailedReviews) {
                 ReviewWritesNotice(

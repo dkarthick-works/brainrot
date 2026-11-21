@@ -28,7 +28,10 @@ fun AuthGate(container: AppContainer) {
     val colors = Brainrot.colors
 
     LaunchedEffect(initialized, user?.id) {
-        if (initialized) container.reviewWrites.bindUser(user?.id)
+        if (initialized) {
+            container.reviewWrites.bindUser(user?.id)
+            container.topicStore.bindUser(user?.id)
+        }
     }
 
     Box(Modifier.fillMaxSize().background(colors.bg), contentAlignment = Alignment.Center) {

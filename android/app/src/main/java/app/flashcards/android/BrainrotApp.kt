@@ -4,8 +4,12 @@ import android.app.Application
 import app.flashcards.android.api.ApiClient
 import app.flashcards.android.api.BrainrotApi
 import app.flashcards.android.data.ThemeStore
+import app.flashcards.android.api.NameRequest
 import app.flashcards.android.api.ReviewRequest
+import app.flashcards.android.api.apiCall
 import app.flashcards.android.data.ReviewWrites
+import app.flashcards.android.data.SaveNotice
+import app.flashcards.android.data.TopicStore
 import com.clerk.api.Clerk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,5 +34,17 @@ class AppContainer(app: Application) {
     val reviewWrites = ReviewWrites(
         post = { id, quality -> api.review(id, ReviewRequest(quality)) },
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    )
+
+    val saveNotice = SaveNotice()
+
+    // On the main thread, so saves and the list update in a single order
+    val topicStore = TopicStore(
+        fetch = { apiCall { api.topics() } },
+        postTopic = { name -> apiCall { api.createTopic(NameRequest(name)) } },
+        patchTopic = { id, name -> apiCall { api.renameTopic(id, NameRequest(name)) } },
+        deleteTopic = { id -> apiCall { api.deleteTopic(id) } },
+        notice = saveNotice,
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
     )
 }
