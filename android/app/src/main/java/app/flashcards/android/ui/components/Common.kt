@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -23,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -98,19 +102,29 @@ fun BrainError(detail: String, onRetry: () -> Unit) {
 @Composable
 fun ThemeSegmented(selected: ThemeMode, onSelect: (ThemeMode) -> Unit) {
     val c = Brainrot.colors
-    val shape = RoundedCornerShape(12.dp)
-    Row(Modifier.fillMaxWidth().clip(shape).border(1.dp, c.line, shape).background(c.card)) {
-        ThemeMode.entries.forEach { mode ->
+    val shape = RoundedCornerShape(14.dp)
+    Row(Modifier.fillMaxWidth().height(44.dp).clip(shape).background(c.card).border(1.dp, c.line, shape)) {
+        ThemeMode.entries.forEachIndexed { index, mode ->
             val active = mode == selected
+            if (index > 0) {
+                val touchesActive = active || ThemeMode.entries[index - 1] == selected
+                Box(Modifier.width(1.dp).fillMaxHeight().background(if (touchesActive) Color.Transparent else c.line))
+            }
             Box(
                 Modifier
                     .weight(1f)
+                    .fillMaxHeight()
                     .background(if (active) c.good else Color.Transparent)
-                    .plainClick(Role.RadioButton) { onSelect(mode) }
-                    .padding(vertical = 12.dp),
+                    .semantics { this.selected = active }
+                    .plainClick(Role.RadioButton) { onSelect(mode) },
                 contentAlignment = Alignment.Center,
             ) {
-                BText(mode.label, color = if (active) c.onGrade else c.ink, size = 14.sp, weight = FontWeight.Medium)
+                BText(
+                    mode.label,
+                    color = if (active) c.onGrade else c.ink,
+                    size = 15.sp,
+                    weight = if (active) FontWeight.SemiBold else FontWeight.Medium,
+                )
             }
         }
     }

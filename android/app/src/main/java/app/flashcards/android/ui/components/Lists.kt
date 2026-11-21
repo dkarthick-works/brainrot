@@ -206,10 +206,24 @@ fun SearchField(value: String, onChange: (String) -> Unit, placeholder: String, 
 
 /** Centered confirmation dialog. System back and tapping outside dismiss it. */
 @Composable
-fun ConfirmSheet(title: String, message: String, onDismiss: () -> Unit, actions: @Composable RowScope.() -> Unit) {
+fun ConfirmSheet(
+    title: String,
+    message: String,
+    onDismiss: () -> Unit,
+    dismissible: Boolean = true,
+    body: (@Composable () -> Unit)? = null,
+    actions: @Composable RowScope.() -> Unit,
+) {
     val c = Brainrot.colors
     val shape = RoundedCornerShape(22.dp)
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = dismissible,
+            dismissOnClickOutside = dismissible,
+        ),
+    ) {
         val window = (LocalView.current.parent as? DialogWindowProvider)?.window
         SideEffect { window?.setDimAmount(0.35f) }
         Column(
@@ -232,26 +246,35 @@ fun ConfirmSheet(title: String, message: String, onDismiss: () -> Unit, actions:
                 align = TextAlign.Center,
             )
             BText(message, Modifier.padding(bottom = 20.dp), color = c.muted, size = 15.sp, align = TextAlign.Center)
+            body?.invoke()
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), content = actions)
         }
     }
 }
 
 @Composable
-fun RowScope.SheetButton(label: String, danger: Boolean = false, onClick: () -> Unit) {
+fun RowScope.SheetButton(
+    label: String,
+    danger: Boolean = false,
+    primary: Boolean = false,
+    accent: Boolean = false,
+    onClick: () -> Unit,
+) {
     val c = Brainrot.colors
     val shape = RoundedCornerShape(12.dp)
+    val fill = if (danger) c.again else if (primary) c.good else c.bg
+    val text = if (danger || primary) c.onGrade else if (accent) c.good else c.ink
     Box(
         Modifier
             .weight(1f)
             .height(44.dp)
             .clip(shape)
-            .background(if (danger) c.again else c.bg)
-            .border(1.dp, if (danger) c.again else c.line, shape)
+            .background(fill)
+            .border(1.dp, if (danger || primary) fill else c.line, shape)
             .plainClick(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        BText(label, color = if (danger) c.onGrade else c.ink, size = 15.sp, weight = FontWeight.SemiBold)
+        BText(label, color = text, size = 15.sp, weight = FontWeight.SemiBold)
     }
 }
 

@@ -32,6 +32,7 @@ fun AuthGate(container: AppContainer) {
             container.reviewWrites.bindUser(user?.id)
             container.topicStore.bindUser(user?.id)
             container.cardStore.bindUser(user?.id)
+            container.keyStore.bindUser(user?.id)
         }
     }
 

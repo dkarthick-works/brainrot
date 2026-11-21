@@ -11,6 +11,7 @@ import app.flashcards.android.api.ReviewRequest
 import app.flashcards.android.api.UpdateCardRequest
 import app.flashcards.android.api.apiCall
 import app.flashcards.android.data.CardStore
+import app.flashcards.android.data.KeyStore
 import app.flashcards.android.data.ReviewWrites
 import app.flashcards.android.data.SaveNotice
 import app.flashcards.android.data.TopicStore
@@ -48,6 +49,14 @@ class AppContainer(app: Application) {
         postTopic = { name -> apiCall { api.createTopic(NameRequest(name)) } },
         patchTopic = { id, name -> apiCall { api.renameTopic(id, NameRequest(name)) } },
         deleteTopic = { id -> apiCall { api.deleteTopic(id) } },
+        notice = saveNotice,
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+    )
+
+    val keyStore = KeyStore(
+        fetch = { apiCall { api.apiKeys() } },
+        postKey = { name -> apiCall { api.createKey(NameRequest(name)) } },
+        deleteKey = { id -> apiCall { api.revokeKey(id) } },
         notice = saveNotice,
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
     )

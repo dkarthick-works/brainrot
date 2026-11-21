@@ -64,15 +64,18 @@ import app.flashcards.android.ui.components.BrainrotIcons
 import app.flashcards.android.ui.components.ReviewWritesNotice
 import app.flashcards.android.ui.components.SaveErrorBanner
 import app.flashcards.android.ui.components.plainClick
-import app.flashcards.android.ui.screens.AgentAccessPlaceholder
+import app.flashcards.android.ui.screens.AgentAccessScreen
 import app.flashcards.android.ui.screens.CardsScreen
 import app.flashcards.android.ui.screens.FreestyleScreen
+import app.flashcards.android.ui.screens.KeyRevealDialog
 import app.flashcards.android.ui.screens.PlayScreen
-import app.flashcards.android.ui.screens.SettingsPlaceholder
+import app.flashcards.android.ui.screens.SettingsScreen
 import app.flashcards.android.ui.screens.TopicsScreen
 import app.flashcards.android.ui.theme.Brainrot
 import app.flashcards.android.ui.theme.SpaceGrotesk
 import app.flashcards.android.ui.theme.cardShadow
+import app.flashcards.android.ui.theme.toClerkTheme
+import com.clerk.ui.userprofile.UserProfileView
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -83,6 +86,7 @@ sealed interface Route {
     @Serializable data class Cards(val topicId: String? = null) : Route
     @Serializable data object Settings : Route
     @Serializable data object AgentAccess : Route
+    @Serializable data object Account : Route
 }
 
 private data class MenuItem(val label: String, val route: Route, val icon: ImageVector, val isCurrent: (NavDestination?) -> Boolean)
@@ -92,7 +96,7 @@ private val Menu = listOf(
     MenuItem("Topics", Route.Topics, BrainrotIcons.Topics) { it?.hasRoute<Route.Topics>() == true },
     MenuItem("Cards", Route.Cards(), BrainrotIcons.Cards) { it?.hasRoute<Route.Cards>() == true },
     MenuItem("Settings", Route.Settings, BrainrotIcons.Settings) {
-        it?.hasRoute<Route.Settings>() == true || it?.hasRoute<Route.AgentAccess>() == true
+        it?.hasRoute<Route.Settings>() == true || it?.hasRoute<Route.AgentAccess>() == true || it?.hasRoute<Route.Account>() == true
     },
 )
 
@@ -184,9 +188,22 @@ fun Shell(container: AppContainer) {
                         )
                     }
                     composable<Route.Settings> {
-                        SettingsPlaceholder(container.themeStore) { nav.navigate(Route.AgentAccess) { launchSingleTop = true } }
+                        SettingsScreen(
+                            container = container,
+                            drawerOpen = menuOpen,
+                            onManageAccount = { nav.navigate(Route.Account) { launchSingleTop = true } },
+                            onAgentAccess = { nav.navigate(Route.AgentAccess) { launchSingleTop = true } },
+                        )
                     }
-                    composable<Route.AgentAccess> { AgentAccessPlaceholder() }
+                    composable<Route.AgentAccess> { AgentAccessScreen(container) }
+                    composable<Route.Account> {
+                        // Clerk's profile has its own header and close button
+                        UserProfileView(
+                            clerkTheme = colors.toClerkTheme(),
+                            onDismiss = { nav.popBackStack() },
+                            isDismissible = true,
+                        )
+                    }
                 }
                 SaveErrorBanner(
                     container.saveNotice,
@@ -257,6 +274,13 @@ fun Shell(container: AppContainer) {
                 }
             }
         }
+
+        val createdKeys by container.keyStore.created.collectAsState()
+        createdKeys.firstOrNull()?.let { key ->
+            KeyRevealDialog(key) { container.keyStore.dismissCreated(key) }
+        }
+
+        if (destination?.hasRoute<Route.Account>() == true) return@BoxWithConstraints
 
         val label = when {
             isSubScreen -> "Back to Settings"
