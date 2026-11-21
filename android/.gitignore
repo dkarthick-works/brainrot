@@ -1,0 +1,11 @@
+fastlane/.env
+*.jks
+*.keystore
+.gradle/
+.kotlin/
+build/
+local.properties
+vendor/
+fastlane/report.xml
+fastlane/README.md
+.bundle/
