@@ -27,6 +27,7 @@ data class CardsState(
     val q: String = "",
     val cards: List<Card>? = null,
     val nextCursor: String? = null,
+    val refreshing: Boolean = false,
     val loadingMore: Boolean = false,
     val moreFailed: Boolean = false,
     val error: ApiError? = null,
@@ -79,6 +80,7 @@ class CardStore(
                 q = q,
                 cards = if (keep) s.cards else null,
                 nextCursor = if (keep) s.nextCursor else null,
+                refreshing = true,
                 loadingMore = false,
                 moreFailed = false,
                 error = null,
@@ -90,15 +92,19 @@ class CardStore(
                 val page = order.withLock { fetchPage(topicId, q, null) }
                 mutableState.update { s ->
                     val unsaved = if (q.isEmpty()) s.cards.orEmpty().filter(::isUnsaved) else emptyList()
-                    s.copy(cards = unsaved + page.cards.filter { it.id !in leaving }, nextCursor = page.nextCursor)
+                    s.copy(
+                        cards = unsaved + page.cards.filter { it.id !in leaving },
+                        nextCursor = page.nextCursor,
+                        refreshing = false,
+                    )
                 }
                 loadedKey = key
             } catch (e: ApiError) {
                 // Results from a different search must not pass for this one
                 mutableState.update { s ->
-                    if (loadedKey != key) s.copy(cards = null, nextCursor = null, error = e)
-                    else if (s.cards == null) s.copy(error = e)
-                    else s
+                    if (loadedKey != key) s.copy(cards = null, nextCursor = null, error = e, refreshing = false)
+                    else if (s.cards == null) s.copy(error = e, refreshing = false)
+                    else s.copy(refreshing = false)
                 }
             }
         }

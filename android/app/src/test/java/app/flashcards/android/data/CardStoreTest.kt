@@ -68,6 +68,28 @@ class CardStoreTest {
         val ids get() = store.state.value.cards?.map { it.id }
     }
 
+    @Test fun refreshingFlagLetsAPageLoadAfterAReload() = runTest {
+        val h = Harness(this)
+        h.pages[Triple(null, "", null)] = Page(listOf(card("a")), "next")
+        h.pages[Triple(null, "", "next")] = Page(listOf(card("b")), null)
+        h.store.show(null, "")
+        runCurrent()
+
+        h.gate = CompletableDeferred()
+        h.store.reload()
+        runCurrent()
+        assertTrue(h.store.state.value.refreshing)
+        h.store.loadMore() // refused while the reload runs
+        h.gate!!.complete(Unit)
+        runCurrent()
+        assertEquals(false, h.store.state.value.refreshing)
+        assertEquals(listOf("a"), h.ids)
+
+        h.store.loadMore()
+        runCurrent()
+        assertEquals(listOf("a", "b"), h.ids)
+    }
+
     @Test fun loadsAndAppendsPagesWithoutDuplicates() = runTest {
         val h = Harness(this)
         h.pages[Triple(null, "", null)] = Page(listOf(card("a"), card("b")), "next")

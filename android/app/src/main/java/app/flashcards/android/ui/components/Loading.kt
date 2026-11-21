@@ -28,6 +28,9 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -121,6 +124,6 @@ fun FullLoader() {
             drawRoundRect(colors.bg, Offset.Zero, Size(w, h), radius)
             drawRoundRect(colors.line, Offset.Zero, Size(w, h), radius, stroke)
         }
-        BText(message, size = 24.sp, weight = FontWeight.Bold, family = SpaceGrotesk, align = TextAlign.Center)
+        BText(message, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, size = 24.sp, weight = FontWeight.Bold, family = SpaceGrotesk, align = TextAlign.Center)
     }
 }

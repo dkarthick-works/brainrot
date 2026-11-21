@@ -24,7 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -89,11 +92,13 @@ fun TealButton(label: String, onClick: () -> Unit) {
 fun BrainError(detail: String, onRetry: () -> Unit) {
     val c = Brainrot.colors
     Column(
-        Modifier.padding(horizontal = 32.dp),
+        Modifier
+            .padding(horizontal = 32.dp)
+            .semantics { liveRegion = LiveRegionMode.Assertive },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        BText("Brain.exe stopped working", size = 28.sp, weight = FontWeight.Bold, family = SpaceGrotesk, align = TextAlign.Center)
+        BText("Brain.exe stopped working", Modifier.semantics { heading() }, size = 28.sp, weight = FontWeight.Bold, family = SpaceGrotesk, align = TextAlign.Center)
         BText(detail, color = c.muted, align = TextAlign.Center)
         TealButton("Try again", onRetry)
     }

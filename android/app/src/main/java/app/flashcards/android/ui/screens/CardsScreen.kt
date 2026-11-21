@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,8 +34,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -188,7 +191,8 @@ fun CardsScreen(container: AppContainer, initialTopicId: String?, drawerOpen: Bo
                 state.error != null && state.topicId == topicId -> item(key = "error") {
                     ListError(errorLine(state.error), store::reload, horizontalPadding = 0.dp)
                 }
-                !loaded -> item(key = "loading") { ListLoading(horizontalPadding = 0.dp) }
+                // A different topic or search is a new load, with a new message and delay
+                !loaded -> item(key = "loading") { key(topicId, q) { ListLoading(horizontalPadding = 0.dp) } }
                 shown.isEmpty() -> item(key = "empty") {
                     BText(
                         if (state.q.isNotEmpty()) "No cards match \"${state.q}\"" else "No cards here yet. Add one below.",
@@ -237,8 +241,14 @@ fun CardsScreen(container: AppContainer, initialTopicId: String?, drawerOpen: Bo
                                         weight = FontWeight.SemiBold,
                                     )
                                 } else {
-                                    LaunchedEffect(state.nextCursor) { store.loadMore() }
-                                    BText("Loading more…", color = c.muted, size = 13.sp)
+                                    // Runs again once a reload ends, since a page can't load during one
+                                    LaunchedEffect(state.nextCursor, state.refreshing) { store.loadMore() }
+                                    BText(
+                                        "Loading more…",
+                                        Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                                        color = c.muted,
+                                        size = 13.sp,
+                                    )
                                 }
                             }
                         }

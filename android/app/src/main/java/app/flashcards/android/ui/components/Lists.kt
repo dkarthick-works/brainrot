@@ -116,7 +116,9 @@ fun ListLoading(horizontalPadding: Dp = 16.dp) {
     Column(Modifier.widthIn(max = ListWidth).fillMaxWidth().padding(horizontal = horizontalPadding)) {
         BText(
             message,
-            Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 12.dp),
+            Modifier
+                .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 12.dp)
+                .semantics { liveRegion = LiveRegionMode.Polite },
             color = c.muted,
             size = 14.sp,
             weight = FontWeight.Medium,
@@ -160,7 +162,7 @@ fun ListError(detail: String, onRetry: () -> Unit, horizontalPadding: Dp = 16.dp
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            BText("Brain.exe stopped working", size = 22.sp, weight = FontWeight.Bold, family = SpaceGrotesk, align = TextAlign.Center)
+            BText("Brain.exe stopped working", Modifier.semantics { heading() }, size = 22.sp, weight = FontWeight.Bold, family = SpaceGrotesk, align = TextAlign.Center)
             BText(detail, Modifier.padding(bottom = 10.dp), color = c.muted, size = 15.sp, align = TextAlign.Center)
             TealButton("Try again", onRetry)
         }

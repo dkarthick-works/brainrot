@@ -39,7 +39,9 @@ fun AuthGate(container: AppContainer) {
     Box(Modifier.fillMaxSize().background(colors.bg), contentAlignment = Alignment.Center) {
         when {
             initError != null && !initialized -> BrainError("Couldn't reach brainrot. Check your connection.") {
-                Clerk.initialize(context.applicationContext, publishableKey = BuildConfig.CLERK_PUBLISHABLE_KEY)
+                if (!Clerk.reinitialize()) {
+                    Clerk.initialize(context.applicationContext, publishableKey = BuildConfig.CLERK_PUBLISHABLE_KEY)
+                }
             }
             !initialized -> FullLoader()
             user == null -> AuthView(
