@@ -11,14 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,67 +21,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.flashcards.android.BuildConfig
-import app.flashcards.android.api.ApiError
-import app.flashcards.android.api.BrainrotApi
-import app.flashcards.android.api.apiCall
-import app.flashcards.android.api.currentToken
-import app.flashcards.android.api.jwtAzp
 import app.flashcards.android.data.ThemeStore
-import app.flashcards.android.ui.DelayedLoader
 import app.flashcards.android.ui.components.BText
-import app.flashcards.android.ui.components.BrainError
 import app.flashcards.android.ui.components.BrainrotIcon
 import app.flashcards.android.ui.components.BrainrotIcons
 import app.flashcards.android.ui.components.ThemeSegmented
 import app.flashcards.android.ui.components.TopBar
 import app.flashcards.android.ui.components.plainClick
 import app.flashcards.android.ui.theme.Brainrot
-import app.flashcards.android.ui.theme.SpaceGrotesk
 import com.clerk.api.Clerk
 import kotlinx.coroutines.launch
-
-private sealed interface Check {
-    data object Loading : Check
-    data class Connected(val due: Int) : Check
-    data class Failed(val error: ApiError, val azp: String?) : Check
-}
-
-/** Phase 1 only: proves the backend accepts the native Clerk token. Phase 2 replaces it with Play. */
-@Composable
-fun PlayConnectionCheck(api: BrainrotApi) {
-    var attempt by remember { mutableIntStateOf(0) }
-    var check by remember { mutableStateOf<Check>(Check.Loading) }
-    LaunchedEffect(attempt) {
-        check = Check.Loading
-        check = try {
-            Check.Connected(apiCall { api.due(1) }.dueCount)
-        } catch (e: ApiError) {
-            val azp = if (e.status == 401 || e.status == 403) currentToken()?.let(::jwtAzp) else null
-            Check.Failed(e, azp)
-        }
-    }
-    val colors = Brainrot.colors
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        when (val state = check) {
-            Check.Loading -> DelayedLoader()
-            is Check.Connected -> Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                BText("${state.due} due", size = 32.sp, weight = FontWeight.Bold, family = SpaceGrotesk)
-                BText("Connected to brainrot", color = colors.muted)
-            }
-            is Check.Failed -> BrainError(
-                detail = if (state.error.status == 0) {
-                    "Couldn't reach brainrot. Check your connection."
-                } else {
-                    "Something broke on our end. Try again in a moment."
-                },
-                diagnostic = if (state.error.status == 0) null else "HTTP ${state.error.status} · azp: ${state.azp ?: "none"}",
-            ) { attempt++ }
-        }
-    }
-}
 
 @Composable
 fun ScreenPlaceholder(title: String, note: String) {

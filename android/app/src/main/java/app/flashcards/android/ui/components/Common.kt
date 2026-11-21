@@ -70,17 +70,19 @@ fun TealButton(label: String, onClick: () -> Unit) {
     val c = Brainrot.colors
     Box(
         Modifier
-            .clip(RoundedCornerShape(12.dp))
+            .height(48.dp)
+            .clip(RoundedCornerShape(14.dp))
             .background(c.good)
             .plainClick(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = 28.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        BText(label, color = c.onGrade, weight = FontWeight.SemiBold)
+        BText(label, color = c.onGrade, size = 15.sp, weight = FontWeight.SemiBold)
     }
 }
 
 @Composable
-fun BrainError(detail: String, diagnostic: String? = null, onRetry: () -> Unit) {
+fun BrainError(detail: String, onRetry: () -> Unit) {
     val c = Brainrot.colors
     Column(
         Modifier.padding(horizontal = 32.dp),
@@ -89,7 +91,6 @@ fun BrainError(detail: String, diagnostic: String? = null, onRetry: () -> Unit) 
     ) {
         BText("Brain.exe stopped working", size = 28.sp, weight = FontWeight.Bold, family = SpaceGrotesk, align = TextAlign.Center)
         BText(detail, color = c.muted, align = TextAlign.Center)
-        diagnostic?.let { BText(it, color = c.muted, size = 12.sp, align = TextAlign.Center) }
         TealButton("Try again", onRetry)
     }
 }

@@ -1,9 +1,9 @@
 package app.flashcards.android.api
 
 import java.io.IOException
-import java.util.Base64
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import retrofit2.HttpException
 
 /** status 0 = the request never reached the server. */
@@ -26,17 +26,6 @@ suspend fun <T> apiCall(block: suspend () -> T): T = try {
     throw ApiError(e.code(), problemDetail(e.response()?.errorBody()?.string(), e.message()))
 } catch (_: IOException) {
     throw ApiError(0, "network error")
+} catch (_: SerializationException) {
+    throw ApiError(-1, "unexpected response")
 }
-
-/** Reads the authorized-party claim for diagnosing a rejected token. Never logs the token. */
-fun jwtAzp(token: String): String? = try {
-    val payload = String(Base64.getUrlDecoder().decode(token.split(".")[1]))
-    ApiClient.json.decodeFromString<JwtClaims>(payload).azp
-} catch (_: IllegalArgumentException) {
-    null
-} catch (_: IndexOutOfBoundsException) {
-    null
-}
-
-@Serializable
-private data class JwtClaims(val azp: String? = null)

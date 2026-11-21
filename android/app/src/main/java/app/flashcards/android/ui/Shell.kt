@@ -3,6 +3,8 @@ package app.flashcards.android.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +30,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -53,12 +57,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import app.flashcards.android.AppContainer
+import app.flashcards.android.data.ReviewStatus
 import app.flashcards.android.ui.components.BText
 import app.flashcards.android.ui.components.BrainrotIcon
 import app.flashcards.android.ui.components.BrainrotIcons
+import app.flashcards.android.ui.components.ReviewWritesNotice
 import app.flashcards.android.ui.components.plainClick
 import app.flashcards.android.ui.screens.AgentAccessPlaceholder
-import app.flashcards.android.ui.screens.PlayConnectionCheck
+import app.flashcards.android.ui.screens.PlayScreen
 import app.flashcards.android.ui.screens.ScreenPlaceholder
 import app.flashcards.android.ui.screens.SettingsPlaceholder
 import app.flashcards.android.ui.theme.Brainrot
@@ -122,18 +128,52 @@ fun Shell(container: AppContainer) {
         val drawerWidth = min(maxWidth * 0.78f, 300.dp)
         val drawerPx = with(LocalDensity.current) { drawerWidth.toPx() }
 
-        NavHost(nav, startDestination = Route.Play, Modifier.fillMaxSize()) {
-            composable<Route.Play> { PlayConnectionCheck(container.api) }
-            composable<Route.Freestyle> { ScreenPlaceholder("Freestyle", "Arrives in phase 3") }
-            composable<Route.Topics> { ScreenPlaceholder("Topics", "Arrives in phase 4") }
-            composable<Route.Cards> { backStackEntry ->
-                backStackEntry.toRoute<Route.Cards>()
-                ScreenPlaceholder("Cards", "Arrives in phase 5")
+        val submissions by container.reviewWrites.submissions.collectAsState()
+        val hasFailedReviews = submissions.any { it.status == ReviewStatus.Failed }
+        val bottomInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+
+        Column(Modifier.fillMaxSize()) {
+            // The notice takes the bottom inset while visible, so it never covers the grade bar
+            NavHost(
+                nav,
+                startDestination = Route.Play,
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .then(if (hasFailedReviews) Modifier.consumeWindowInsets(bottomInset) else Modifier),
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+            ) {
+                composable<Route.Play> {
+                    PlayScreen(
+                        container = container,
+                        onAddCards = { go(Route.Cards()) },
+                        onConnectAgent = {
+                            go(Route.Settings)
+                            nav.navigate(Route.AgentAccess) { launchSingleTop = true }
+                        },
+                        onFreestyle = { go(Route.Freestyle) },
+                    )
+                }
+                composable<Route.Freestyle> { ScreenPlaceholder("Freestyle", "Arrives in phase 3") }
+                composable<Route.Topics> { ScreenPlaceholder("Topics", "Arrives in phase 4") }
+                composable<Route.Cards> { backStackEntry ->
+                    backStackEntry.toRoute<Route.Cards>()
+                    ScreenPlaceholder("Cards", "Arrives in phase 5")
+                }
+                composable<Route.Settings> {
+                    SettingsPlaceholder(container.themeStore) { nav.navigate(Route.AgentAccess) { launchSingleTop = true } }
+                }
+                composable<Route.AgentAccess> { AgentAccessPlaceholder() }
             }
-            composable<Route.Settings> {
-                SettingsPlaceholder(container.themeStore) { nav.navigate(Route.AgentAccess) { launchSingleTop = true } }
+            if (hasFailedReviews) {
+                ReviewWritesNotice(
+                    count = submissions.count { it.status == ReviewStatus.Failed },
+                    showBackHome = !isPlay,
+                    onBackHome = { go(Route.Play) },
+                    onRetry = container.reviewWrites::retryFailed,
+                )
             }
-            composable<Route.AgentAccess> { AgentAccessPlaceholder() }
         }
 
         if (scrim > 0f) {

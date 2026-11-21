@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.activity.compose)
     implementation(libs.navigation.compose)
+    implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.clerk.api)
     implementation(libs.clerk.ui)
     implementation(libs.retrofit)
@@ -78,4 +79,5 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.serialization.json)
     testImplementation(libs.junit)
+    testImplementation(libs.coroutines.test)
 }
