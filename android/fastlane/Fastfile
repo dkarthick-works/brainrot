@@ -1,0 +1,44 @@
+default_platform(:android)
+
+platform :android do
+  before_all do
+    ENV["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
+    ENV["ANDROID_HOME"] ||= File.expand_path("~/Android/Sdk")
+  end
+
+  desc "Unit tests and lint"
+  lane :test do
+    gradle(task: "testDebugUnitTest lintDebug")
+  end
+
+  desc "Debug APK, no upload"
+  lane :debug_build do
+    gradle(task: "assembleDebug")
+  end
+
+  desc "Test, build signed APK, upload to TestApp.io, tag. Options: dirty:true (no clean-tree check or tag), notify:false"
+  lane :beta do |options|
+    dirty = options[:dirty].to_s == "true"
+    ensure_git_status_clean unless dirty
+    test
+    gradle(task: "assembleRelease")
+
+    apk = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    upload_to_testappio(
+      api_token: ENV["TESTAPPIO_API_TOKEN"],
+      app_id: ENV["TESTAPPIO_APP_ID"],
+      release: "android",
+      apk_file: apk,
+      git_release_notes: !dirty,
+      git_commit_id: !dirty,
+      release_notes: dirty ? "Pipeline test build" : nil,
+      notify: options[:notify].to_s != "false"
+    )
+
+    unless dirty
+      name = File.read("../version.properties")[/versionName=(.+)/, 1].strip
+      code = sh("git rev-list --count HEAD", log: false).strip
+      add_git_tag(tag: "android-v#{name}-#{code}")
+    end
+  end
+end

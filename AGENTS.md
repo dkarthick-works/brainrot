@@ -1,6 +1,6 @@
 # brainrot (flashcards)
 
-Spring Boot backend in `src/`. Backend plan: `BACKEND_PLAN.md`. Frontend plan: `FRONTEND_PLAN.md` (web PWA in `frontend/`). Deferred work: `BACKLOG.md`.
+Spring Boot backend in `src/`. Backend plan: `BACKEND_PLAN.md`. Frontend plan: `FRONTEND_PLAN.md` (web PWA in `frontend/`). Android plan: `ANDROID_PLAN.md` (Kotlin app in `android/`). Deferred work: `BACKLOG.md`.
 
 ## Frontend design reference
 The approved UI design lives in `prototype/`. It's a throwaway mock (Vite + React, mock data, no API calls) used only to settle the design.
