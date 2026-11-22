@@ -55,8 +55,10 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
@@ -84,6 +86,7 @@ import app.flashcards.android.ui.components.BrainError
 import app.flashcards.android.ui.components.FullLoader
 import app.flashcards.android.ui.components.TealButton
 import app.flashcards.android.ui.components.plainClick
+import app.flashcards.android.ui.components.reducedMotion
 import app.flashcards.android.ui.theme.Brainrot
 import app.flashcards.android.ui.theme.Inter
 import app.flashcards.android.ui.theme.SpaceGrotesk
@@ -225,9 +228,11 @@ private fun Study(view: PlayView.Study, topicNames: Map<String, String>, onGrade
     val latestGraded by rememberUpdatedState(onGraded)
     val density = LocalDensity.current
     val dismissPx = with(density) { 100.dp.toPx() }
+    val reduced = reducedMotion()
 
     LaunchedEffect(top.id, flipped) {
-        rotation.animateTo(if (flipped) 180f else 0f, tween(450, easing = FlipEasing))
+        val target = if (flipped) 180f else 0f
+        if (reduced) rotation.snapTo(target) else rotation.animateTo(target, tween(450, easing = FlipEasing))
     }
 
     Column(
@@ -252,7 +257,7 @@ private fun Study(view: PlayView.Study, topicNames: Map<String, String>, onGrade
                 if (!flipped || picked == null || exiting) return
                 exiting = true
                 scope.launch {
-                    drag.animateTo(direction * widthPx * 1.1f, tween(260, easing = EaseOut))
+                    if (!reduced) drag.animateTo(direction * widthPx * 1.1f, tween(260, easing = EaseOut))
                     latestGraded(top, picked)
                     flipped = false
                     grade = null
@@ -264,7 +269,7 @@ private fun Study(view: PlayView.Study, topicNames: Map<String, String>, onGrade
             Box(
                 Modifier
                     .fillMaxSize()
-                    .semantics {
+                    .semantics(mergeDescendants = true) {
                         stateDescription = if (flipped) "Answer shown" else "Question shown"
                         onClick(if (flipped) "Show question" else "Reveal answer") {
                             if (!exiting) flipped = !flipped
@@ -318,6 +323,7 @@ private fun Study(view: PlayView.Study, topicNames: Map<String, String>, onGrade
                         Box(
                             Modifier
                                 .fillMaxSize()
+                                .then(if (isTop) Modifier else Modifier.clearAndSetSemantics {})
                                 .graphicsLayer {
                                     if (isTop) {
                                         val x = if (flipped && grade != null) drag.value else drag.value / 8
@@ -433,6 +439,7 @@ private fun GradeBar(card: Card, visible: Boolean, selected: Int?, onSelect: (In
             .widthIn(max = 640.dp)
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
+            .then(if (visible) Modifier else Modifier.clearAndSetSemantics {})
             .graphicsLayer {
                 this.alpha = alpha
                 translationY = (1f - alpha) * 12.dp.toPx()
@@ -453,6 +460,7 @@ private fun GradeBar(card: Card, visible: Boolean, selected: Int?, onSelect: (In
                 Modifier
                     .weight(1f)
                     .background(if (active) color else Color.Transparent)
+                    .semantics { this.selected = active }
                     .then(if (visible) Modifier.plainClick { onSelect(g.quality) } else Modifier)
                     .padding(vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,

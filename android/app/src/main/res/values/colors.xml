@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="paper">#F4F1EA</color>
-    <color name="good">#437C77</color>
+    <color name="splash_ink">#1D1B18</color>
+    <!-- The launcher icon looks the same in both themes -->
+    <color name="icon_paper">#F4F1EA</color>
+    <color name="icon_ink">#1D1B18</color>
+    <color name="dark_paper">#15140F</color>
+    <color name="dark_ink">#EFEBE2</color>
 </resources>

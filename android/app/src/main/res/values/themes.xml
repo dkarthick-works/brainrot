@@ -3,4 +3,7 @@
     <style name="Theme.Brainrot" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/paper</item>
     </style>
+    <!-- Filled in on Android 12+, where the system draws the splash -->
+    <style name="Theme.Brainrot.SplashLight" />
+    <style name="Theme.Brainrot.SplashDark" />
 </resources>

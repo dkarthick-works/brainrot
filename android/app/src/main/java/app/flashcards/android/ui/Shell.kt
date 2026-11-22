@@ -1,13 +1,14 @@
 package app.flashcards.android.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -41,7 +42,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -139,7 +142,8 @@ fun Shell(container: AppContainer) {
         val hasFailedReviews = submissions.any { it.status == ReviewStatus.Failed }
         val bottomInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
 
-        Column(Modifier.fillMaxSize()) {
+        // Screen readers stay inside the drawer while it's open
+        Column(Modifier.fillMaxSize().then(if (menuOpen) Modifier.clearAndSetSemantics {} else Modifier)) {
             // The notice takes the bottom inset while visible, so it never covers the grade bar
             Box(
                 Modifier
@@ -227,6 +231,7 @@ fun Shell(container: AppContainer) {
             Box(
                 Modifier
                     .fillMaxSize()
+                    .clearAndSetSemantics {}
                     .graphicsLayer { alpha = scrim }
                     .background(Color.Black.copy(alpha = 0.3f))
                     .plainClick { menuOpen = false },
@@ -241,7 +246,7 @@ fun Shell(container: AppContainer) {
                     .graphicsLayer { translationX = -drawerPx * (1f - progress) }
                     .background(colors.card)
                     .border(1.dp, colors.line)
-                    .plainClick(onClick = {})
+                    .pointerInput(Unit) { detectTapGestures {} } // taps on the drawer don't reach the scrim
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start))
                     .padding(start = 12.dp, end = 12.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.Bottom),

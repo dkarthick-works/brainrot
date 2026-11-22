@@ -275,7 +275,7 @@ private fun FreestyleStack(
         Box(
             Modifier
                 .fillMaxSize()
-                .semantics {
+                .semantics(mergeDescendants = true) {
                     stateDescription = if (flipped) "Answer shown" else "Question shown"
                     onClick(if (flipped) "Show question" else "Reveal answer") {
                         if (!exiting && !suspended) flipped = !flipped

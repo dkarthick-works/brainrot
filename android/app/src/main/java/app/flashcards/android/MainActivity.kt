@@ -1,6 +1,8 @@
 package app.flashcards.android
 
+import android.content.res.Resources
 import android.graphics.Color as AndroidColor
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -28,6 +30,18 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.System -> isSystemInDarkTheme()
                 ThemeMode.Light -> false
                 ThemeMode.Dark -> true
+            }
+            LaunchedEffect(mode) {
+                // The system remembers this, so the next launch's splash matches the chosen theme
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    splashScreen.setSplashScreenTheme(
+                        when (mode) {
+                            ThemeMode.System -> Resources.ID_NULL
+                            ThemeMode.Light -> R.style.Theme_Brainrot_SplashLight
+                            ThemeMode.Dark -> R.style.Theme_Brainrot_SplashDark
+                        },
+                    )
+                }
             }
             LaunchedEffect(dark) {
                 val bars = if (dark) {
