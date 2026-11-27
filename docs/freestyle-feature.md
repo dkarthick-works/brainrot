@@ -4,6 +4,8 @@
 **Previously called:** Play. The feature is now named **Freestyle** to distinguish it from scheduled review (currently named Play internally).
 **Workflow:** Draft the feature → plan implementation → implement. This file records the feature, not an implementation plan.
 
+**Implementation reading guide:** The numbered sections retain the agreed feature requirements and historical design context, not independent execution evidence. Current source is [Freestyle.tsx](../frontend/src/screens/Freestyle.tsx), [FreestyleStack.tsx](../frontend/src/components/FreestyleStack.tsx), [useFreestyleSession.ts](../frontend/src/hooks/useFreestyleSession.ts) and [freestyle.ts](../frontend/src/freestyle.ts). Actual hints are “Tap to reveal · Swipe to continue” / “Tap for question · Swipe to continue”. Study-card backs show answer text without repeating the question. Scheduled-review recovery lives in [ReviewWrites.tsx](../frontend/src/components/ReviewWrites.tsx); its records survive route changes, not reload or sign-out. The implementation plan is historical intent; use [data semantics](data-model.md#frontend-state-and-network-limits) and [verification](freestyle-verification.md) for implemented behavior and checks.
+
 ## 1. Goal
 
 Give the user a simple way to practise all their flashcards whenever they want, including after Home shows **Brain Upgraded**. Freestyle is optional, ungraded practice: see a question, tap to reveal its answer, and swipe to continue. Leave at any time.
@@ -114,7 +116,7 @@ Topic selection is deferred; v1 covers all cards. Previous-card navigation and a
 
 ## 9. Next step and acceptance criteria
 
-Detailed implementation plan (approved to proceed without a separate prototype): [`freestyle-implementation-plan.md`](freestyle-implementation-plan.md). It covers drawer and completion entry points, design states, route/naming choices, page-local shuffle, read-only pagination, pending scheduled-review writes, tests, and phased delivery. The plan also records the small production-hosting change needed to serve the new `/freestyle` route directly; no backend API changes are needed. Implementation has not started.
+Historical implementation plan (approved to proceed without a separate prototype): [`freestyle-implementation-plan.md`](freestyle-implementation-plan.md). It covers drawer and completion entry points, design states, route/naming choices, page-local shuffle, read-only pagination, pending scheduled-review writes, tests, and phased delivery. Implementation is present in source `8c2a9bf3ce5e2c609cafb8dbef920f5ef3026131`, including the Spring `/freestyle` SPA forward; no backend API change was introduced. See [verification results and remaining manual checks](freestyle-verification.md).
 
 Minimum acceptance checks:
 - Freestyle is accessible from the sidebar with or without due cards.

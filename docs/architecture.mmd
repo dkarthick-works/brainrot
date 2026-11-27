@@ -1,5 +1,6 @@
 flowchart LR
     Browser["React PWA browser"]
+    Android["Android Kotlin / Compose app"]
     Agent["HTTP MCP client"]
     Script["REST script"]
     Clerk["Clerk identity and JWKS"]
@@ -17,6 +18,8 @@ flowchart LR
     DB[("MongoDB: cards, topics, api_keys")]
     Browser -->|"shell assets, Docker packaging"| Static
     Browser -->|"sign-in and session token"| Clerk
+    Android -->|"Clerk SDK sign-in and session token"| Clerk
+    Android -->|"Retrofit REST with session JWT"| Security
     Agent -.->|"OAuth sign-in when supported"| Clerk
     Browser -->|"REST with session JWT"| Security
     Script -->|"REST with fc_ key or session JWT"| Security
