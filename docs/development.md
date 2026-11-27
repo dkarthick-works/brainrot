@@ -91,6 +91,12 @@ Audit execution at source `5bd432a569b429f086b7a94ffbdcd9821a90e3f4`: all 13 Mav
 
 Incremental execution at source `8c2a9bf3ce5e2c609cafb8dbef920f5ef3026131`: `npm --prefix frontend ci --ignore-scripts --no-audit --no-fund`, `npm --prefix frontend test` (71 tests/seven files), `npm --prefix frontend run test:browser` (nine Chromium cases), and `env -u MONGODB_URI -u CLERK_ISSUER -u MCP_RESOURCE_URL -u ALLOWED_ORIGINS ./mvnw -B test` (14 tests, zero failures/errors/skips) all exited 0. The frontend production build also exited 0 with a synthetic example publishable-key value; this proves compilation/PWA generation, not live Clerk configuration. Toolchain versions match those listed above. Testcontainers supplied disposable MongoDB and OAuth used local signing/JWKS fixtures. The Chromium binary was already available; browser/OS installation commands were not rerun. No application/dependency changes, packaged jar launch, image build, production requests, existing database access or live login were part of this incremental pass.
 
+## Android client
+
+Android is a separate Gradle build under `android/`, not part of `./mvnw` or the web Docker bundle. See [Android setup and behavior](android.md) for the SDK/JDK 17 requirements, public-key environment variable, localhost debug networking, signing/upload boundary and exact Android checks. The backend still requires JDK 25; use a command-scoped `JAVA_HOME` for Android.
+
+At source `2ef025d983b77bb7c21600f7e43ebcfb288b8eea`, the incremental Android review also reran `npm --prefix frontend ci --ignore-scripts --no-audit --no-fund`, `npm --prefix frontend test` (71 passed), `npm --prefix frontend run test:browser` (nine passed), and `env -u MONGODB_URI -u CLERK_ISSUER -u MCP_RESOURCE_URL -u ALLOWED_ORIGINS ./mvnw -B test` (14 passed, zero failures/errors/skips). The web production build passed using `VITE_CLERK_PUBLISHABLE_KEY=pk_test_ZXhhbXBsZS5jbGVyay5hY2NvdW50cy5kZXYk npm --prefix frontend run build`, a synthetic example key rather than a live credential. All exited 0. This pass used Java 25.0.5/Maven 3.10.0, Node 26.12.1/npm 12.0.2 for web/backend and OpenJDK 17.0.21.1 for Android. Earlier toolchain/results above remain historical evidence. Testcontainers used disposable MongoDB and OAuth fixtures used local JWKS; Chromium used the stubbed test entry/API. None proves live sign-in, deployment or Android device behavior.
+
 ## Container packaging and health
 
 From the repository root, after setting a public instance key:
